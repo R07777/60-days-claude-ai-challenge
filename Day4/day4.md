@@ -38,6 +38,6 @@ Referrals convert much better than cold applications. Building a network early c
 3. A roadmap becomes more actionable when milestones are clearly defined.
 4. Networking is as important as technical skills.
 
-## Screenshot
+## Screenshot file
 
 ![Career Roadmap](roadmap.png)
