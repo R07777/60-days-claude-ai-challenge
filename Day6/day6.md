@@ -32,7 +32,7 @@ Optimized Score: 87/100
 5. A one-page resume is ideal for students and freshers.
 
 ### Optimized Resume
-![ATS Resume](ats_resume_screenshot.png)
+![ATS Resume](ats_resume.png)
 
 ## Conclusion
 
