@@ -43,6 +43,7 @@ A responsive environmental dashboard that analyzes air quality metrics and prese
 ## Files Included
 
 * environmental_health_analyzer.html
+* environmental_health_analyzer.jpg
 
 ## Outcome
 
