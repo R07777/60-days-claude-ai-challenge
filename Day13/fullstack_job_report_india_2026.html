@@ -1,0 +1,352 @@
+
+<style>
+  .section { margin-bottom: 2rem; }
+  .section-title { font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-secondary); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 2rem; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 12px; }
+  .metric-label { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+  .metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
+  .job-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; margin-bottom: 10px; }
+  .job-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .job-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; }
+  .job-company { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+  .score-badge { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: flex-start; justify-content: center; font-size: 13px; font-weight: 500; }
+  .score-high { background: #EAF3DE; color: #3B6D11; }
+  .score-med { background: #FAEEDA; color: #854F0B; }
+  .job-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .tag { font-size: 11px; padding: 3px 9px; border-radius: 99px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; }
+  .job-fit { font-size: 13px; color: var(--color-text-secondary); margin: 8px 0 10px; line-height: 1.5; }
+  .apply-btn { font-size: 12px; padding: 6px 14px; border-radius: var(--border-radius-md); background: transparent; border: 0.5px solid var(--color-border-secondary); color: var(--color-text-primary); cursor: pointer; text-decoration: none; display: inline-block; }
+  .apply-btn:hover { background: var(--color-background-secondary); }
+  .skill-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .skill-item { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+  .skill-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+  .skill-bar-bg { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; }
+  .skill-bar { height: 4px; border-radius: 2px; background: #185FA5; }
+  .skill-pct { font-size: 11px; color: var(--color-text-tertiary); margin: 3px 0 0; }
+  .gap-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .gap-item:last-child { border-bottom: none; }
+  .gap-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .gap-dot.high { background: #E24B4A; }
+  .gap-dot.med { background: #EF9F27; }
+  .gap-dot.low { background: #639922; }
+  .gap-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+  .gap-label { font-size: 11px; margin-top: 2px; color: var(--color-text-tertiary); }
+  .tip-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--color-border-tertiary); align-items: flex-start; }
+  .tip-item:last-child { border-bottom: none; }
+  .tip-num { font-size: 13px; font-weight: 500; color: #185FA5; min-width: 20px; }
+  .tip-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+  .tip-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .insight-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 8px; font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+  .insight-box span { color: var(--color-text-secondary); font-size: 12px; }
+  .overall { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; background: var(--color-background-primary); }
+  .overall-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+  .overall-row:last-child { border-bottom: none; }
+  .fit-pill { font-size: 11px; padding: 3px 10px; border-radius: 99px; font-weight: 500; }
+  .fit-strong { background: #EAF3DE; color: #3B6D11; }
+  .fit-good { background: #FAEEDA; color: #854F0B; }
+  .fit-gap { background: #FCEBEB; color: #A32D2D; }
+</style>
+
+<div style="padding: 1rem 0;">
+
+<div class="metrics">
+  <div class="metric">
+    <p class="metric-label">Open roles (India)</p>
+    <p class="metric-value">900+</p>
+    <p class="metric-sub">Junior Full Stack (Indeed)</p>
+  </div>
+  <div class="metric">
+    <p class="metric-label">LinkedIn listings</p>
+    <p class="metric-value">814</p>
+    <p class="metric-sub">Added daily</p>
+  </div>
+  <div class="metric">
+    <p class="metric-label">Target CTC range</p>
+    <p class="metric-value">₹5–10L</p>
+    <p class="metric-sub">Achievable for strong profiles</p>
+  </div>
+  <div class="metric">
+    <p class="metric-label">Demand growth</p>
+    <p class="metric-value">30%</p>
+    <p class="metric-sub">YoY (Naukri data)</p>
+  </div>
+</div>
+
+<div class="section">
+  <p class="section-title">Top job opportunities — match ranked</p>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Junior Full Stack Developer (MERN)</p>
+        <p class="job-company">G7 CR Technologies · Bengaluru</p>
+      </div>
+      <div class="score-badge score-high">93%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Bengaluru, KA</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Active — June 2026</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹5–7 LPA</span>
+      <span class="tag">Entry level / Fresher</span>
+    </div>
+    <p class="job-fit">Explicitly targets freshers for MERN (MongoDB, Express, React, Node.js) development. Real client projects — not demo work. Ideal entry point to build production experience fast.</p>
+    <a class="apply-btn" href="https://in.indeed.com/q-full-stack-developer-l-bengaluru,-karnataka-jobs.html" target="_blank">View on Indeed ↗</a>
+  </div>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Full Stack Developer (React + Node.js)</p>
+        <p class="job-company">MiClient · Remote (India)</p>
+      </div>
+      <div class="score-badge score-high">90%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Remote</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Active — June 2026</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹5–8 LPA</span>
+      <span class="tag">Open to all locations</span>
+    </div>
+    <p class="job-fit">Remote-first MERN full stack role, ideal for someone open to all work arrangements. Genuine full stack ownership — React frontend + Node backend — with cross-functional team collaboration.</p>
+    <a class="apply-btn" href="https://in.indeed.com/q-full-stack-developer-jobs.html" target="_blank">View on Indeed ↗</a>
+  </div>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Reactjs/Nodejs Developer (Fresher)</p>
+        <p class="job-company">Hirewand · Bengaluru</p>
+      </div>
+      <div class="score-badge score-high">88%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Bengaluru, KA</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Posted 4 weeks ago</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹4–6 LPA</span>
+      <span class="tag">Fresher-friendly</span>
+    </div>
+    <p class="job-fit">Direct fresher hire for React + Node stack in one of India's top tech hubs. Bengaluru location offers networking and fast career growth in a startup-dense ecosystem.</p>
+    <a class="apply-btn" href="https://in.linkedin.com/jobs/fresher-full-stack-developer-jobs" target="_blank">View on LinkedIn ↗</a>
+  </div>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Full Stack Developer (1–2 yrs exp)</p>
+        <p class="job-company">IBN Technologies · Pune</p>
+      </div>
+      <div class="score-badge score-high">85%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Pune, MH</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Active — June 2026</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹5–9 LPA</span>
+      <span class="tag">Immediate joiner preferred</span>
+    </div>
+    <p class="job-fit">Targets 1–2 year experience range — perfect profile fit. Pune offers strong cost-of-living advantage with competitive IT salaries. Collaborate with senior devs and QA teams.</p>
+    <a class="apply-btn" href="https://in.indeed.com/q-full-stack-developer-jobs.html" target="_blank">View on Indeed ↗</a>
+  </div>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Full Stack Engineer</p>
+        <p class="job-company">Mavenberg Innovations · Bengaluru</p>
+      </div>
+      <div class="score-badge score-med">80%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Bengaluru, KA</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Active — June 2026</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹6–10 LPA</span>
+      <span class="tag">1–2 yrs experience</span>
+    </div>
+    <p class="job-fit">Requires 1–2 years hands-on experience. Slightly stretching your bracket but achievable with a strong GitHub portfolio. Works across senior dev, QA, and product teams.</p>
+    <a class="apply-btn" href="https://in.indeed.com/q-full-stack-developer-l-bengaluru,-karnataka-jobs.html" target="_blank">View on Indeed ↗</a>
+  </div>
+
+  <div class="job-card">
+    <div class="job-top">
+      <div>
+        <p class="job-title">Junior Full Stack Developer (WFH)</p>
+        <p class="job-company">Chaosology · Chennai / Remote</p>
+      </div>
+      <div class="score-badge score-med">78%</div>
+    </div>
+    <div class="job-meta">
+      <span class="tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Chennai / WFH</span>
+      <span class="tag"><i class="ti ti-calendar" aria-hidden="true"></i> Active — June 2026</span>
+      <span class="tag"><i class="ti ti-currency-rupee" aria-hidden="true"></i> ₹4–6 LPA</span>
+      <span class="tag">Work from home</span>
+    </div>
+    <p class="job-fit">Junior role with work-from-home option — good for building remote work experience early. Strong communication skills required for cross-functional stakeholder collaboration.</p>
+    <a class="apply-btn" href="https://in.indeed.com/q-junior-full-stack-developer-jobs.html" target="_blank">View on Indeed ↗</a>
+  </div>
+
+</div>
+
+<div class="section">
+  <p class="section-title">Most in-demand skills across these roles</p>
+  <div class="skill-grid">
+    <div class="skill-item">
+      <p class="skill-name">React.js</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:95%"></div></div>
+      <p class="skill-pct">95% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">Node.js</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:92%"></div></div>
+      <p class="skill-pct">92% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">MongoDB</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:80%"></div></div>
+      <p class="skill-pct">80% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">REST APIs</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:88%"></div></div>
+      <p class="skill-pct">88% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">Git / GitHub</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:85%"></div></div>
+      <p class="skill-pct">85% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">HTML5 / CSS3</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:82%"></div></div>
+      <p class="skill-pct">82% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">TypeScript</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:60%"></div></div>
+      <p class="skill-pct">60% of roles</p>
+    </div>
+    <div class="skill-item">
+      <p class="skill-name">AWS / Cloud</p>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:45%"></div></div>
+      <p class="skill-pct">45% of roles</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="section-title">Skill gap analysis</p>
+  <div class="gap-item">
+    <div class="gap-dot high"></div>
+    <div>
+      <p class="gap-text">TypeScript — increasingly required, especially at product companies and startups above ₹7 LPA.</p>
+      <p class="gap-label">Priority: High · Add to your stack within 1–2 months</p>
+    </div>
+  </div>
+  <div class="gap-item">
+    <div class="gap-dot high"></div>
+    <div>
+      <p class="gap-text">AI tool proficiency (GitHub Copilot, Cursor) — commands 20–35% salary premium; increasingly listed as a differentiator.</p>
+      <p class="gap-label">Priority: High · Start using Copilot in personal projects now</p>
+    </div>
+  </div>
+  <div class="gap-item">
+    <div class="gap-dot med"></div>
+    <div>
+      <p class="gap-text">Cloud basics (AWS or GCP) — not usually mandatory at entry level but adds significant credibility and opens more roles.</p>
+      <p class="gap-label">Priority: Medium · AWS Cloud Practitioner certification is a good 3-month goal</p>
+    </div>
+  </div>
+  <div class="gap-item">
+    <div class="gap-dot med"></div>
+    <div>
+      <p class="gap-text">System design fundamentals — entry-level interviews increasingly include basic architecture questions even at the junior level.</p>
+      <p class="gap-label">Priority: Medium · Study REST, caching basics, and simple database design</p>
+    </div>
+  </div>
+  <div class="gap-item">
+    <div class="gap-dot low"></div>
+    <div>
+      <p class="gap-text">Docker / containerization basics — appears in 30–40% of listings; good-to-have rather than blocking.</p>
+      <p class="gap-label">Priority: Low · Learn after securing first role</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="section-title">Market demand insights</p>
+  <div class="insight-box">📈 Demand for full stack developers is growing 30% YoY in India per Naukri — one of the strongest hiring signals in the IT sector right now.</div>
+  <div class="insight-box">💰 Your target band of ₹5–10 LPA is achievable but competitive. Freshers average ₹4.5–6 LPA; a strong portfolio or MERN certification can push you to ₹7–8 LPA from day one.</div>
+  <div class="insight-box">🏙 Bengaluru, Hyderabad, and Pune dominate hiring volume. Remote roles are growing but more competitive due to national applicant pools.</div>
+  <div class="insight-box">🤖 Full stack developers with AI tool integration experience (Copilot, LLM APIs) are seeing 20–35% higher offers. This is now a practical differentiator even at entry level.</div>
+</div>
+
+<div class="section">
+  <p class="section-title">Recommendations to improve interview chances</p>
+  <div class="tip-item">
+    <div class="tip-num">01</div>
+    <div>
+      <p class="tip-text">Deploy 2–3 live MERN projects with real URLs</p>
+      <p class="tip-sub">A deployed e-commerce app, task manager, or dashboard on Vercel/Render beats a private GitHub repo in every recruiter conversation.</p>
+    </div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-num">02</div>
+    <div>
+      <p class="tip-text">Add TypeScript to at least one project</p>
+      <p class="tip-sub">Rewrite a JS project in TS over a weekend — it signals seriousness and readiness for production codebases.</p>
+    </div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-num">03</div>
+    <div>
+      <p class="tip-text">Optimize your LinkedIn headline and apply directly through it</p>
+      <p class="tip-sub">"Full Stack Developer | MERN | React | Node.js | Open to Work" — keyword-driven headlines get recruiter inbound messages.</p>
+    </div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-num">04</div>
+    <div>
+      <p class="tip-text">Apply on Naukri.com, Internshala, and Indeed simultaneously</p>
+      <p class="tip-sub">63+ fresher full stack roles are live on Internshala alone this month. Spread applications across all three platforms for maximum reach.</p>
+    </div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-num">05</div>
+    <div>
+      <p class="tip-text">Prepare for DSA + system design basics</p>
+      <p class="tip-sub">Even junior-level interviews at product companies and funded startups include LeetCode-easy/medium problems and basic architecture questions.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="section-title">Overall fit assessment</p>
+  <div class="overall">
+    <div class="overall-row">
+      <span>Role availability vs your profile</span>
+      <span class="fit-pill fit-strong">Strong fit</span>
+    </div>
+    <div class="overall-row">
+      <span>CTC target (₹5–10 LPA) vs market</span>
+      <span class="fit-pill fit-good">Achievable with strong portfolio</span>
+    </div>
+    <div class="overall-row">
+      <span>Location flexibility (all India)</span>
+      <span class="fit-pill fit-strong">Major advantage</span>
+    </div>
+    <div class="overall-row">
+      <span>Stack demand (Full Stack / MERN)</span>
+      <span class="fit-pill fit-strong">Very high demand</span>
+    </div>
+    <div class="overall-row">
+      <span>Skill gaps to close</span>
+      <span class="fit-pill fit-good">2 high-priority gaps (TS, AI tools)</span>
+    </div>
+    <div class="overall-row">
+      <span>Timeline to first offer</span>
+      <span class="fit-pill fit-good">4–8 weeks with active applications</span>
+    </div>
+  </div>
+</div>
+
+</div>
