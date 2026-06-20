@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FacePuzzle — Scramble Yourself</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060b18;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --indigo: #6366f1;
+    --indigo-light: #818cf8;
+    --cyan: #22d3ee;
+    --green: #4ade80;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #475569;
+    --radius: 16px;
+    --radius-sm: 8px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px 16px 40px;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(34,211,238,0.08) 0%, transparent 60%),
+      var(--bg);
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--indigo-light), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo span {
+    font-weight: 300;
+    opacity: 0.7;
+  }
+
+  .header-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  /* ── GLASS CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 680px;
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CAMERA SCREEN ── */
+  #screen-camera .camera-wrap {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    background: #0a0f1e;
+    border: 1px solid var(--border);
+  }
+
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    display: block;
+  }
+
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .scan-overlay.active { opacity: 1; }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    box-shadow: 0 0 12px var(--cyan);
+    animation: scanDown 1.2s ease-in-out infinite;
+  }
+  @keyframes scanDown {
+    0%   { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  .corner-marks {
+    position: absolute;
+    inset: 20px;
+  }
+  .corner { position: absolute; width: 24px; height: 24px; }
+  .corner::before, .corner::after { content: ''; position: absolute; background: var(--cyan); }
+  .corner::before { width: 100%; height: 2px; }
+  .corner::after  { width: 2px; height: 100%; }
+  .corner.tl { top: 0; left: 0; }
+  .corner.tr { top: 0; right: 0; transform: scaleX(-1); }
+  .corner.bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .corner.br { bottom: 0; right: 0; transform: scale(-1); }
+
+  .camera-permission-denied {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    padding: 40px;
+    text-align: center;
+  }
+  .camera-permission-denied .icon {
+    font-size: 3rem;
+    line-height: 1;
+  }
+  .camera-permission-denied h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--red);
+  }
+  .camera-permission-denied p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    max-width: 320px;
+  }
+
+  .camera-hint {
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ── DIFF SELECT SCREEN ── */
+  #screen-difficulty .diff-header {
+    padding: 32px 32px 0;
+    text-align: center;
+  }
+  #screen-difficulty h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  #screen-difficulty p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .preview-container {
+    padding: 24px 32px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #preview-canvas {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    max-width: 240px;
+    width: 100%;
+    aspect-ratio: 1;
+    display: block;
+  }
+
+  .diff-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 0 32px 32px;
+  }
+
+  .diff-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    color: var(--text);
+  }
+  .diff-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--indigo);
+    transform: translateY(-2px);
+  }
+  .diff-btn .grid-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .diff-btn .diff-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .diff-btn .diff-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .retake-row {
+    padding: 0 32px 24px;
+    text-align: center;
+  }
+
+  /* ── PUZZLE SCREEN ── */
+  #screen-puzzle {
+    display: none;
+  }
+  #screen-puzzle.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* HUD */
+  .hud {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .hud-tile {
+    padding: 14px 10px;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .hud-tile .hud-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .hud-tile .hud-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .hud-tile.accent .hud-value { color: var(--cyan); }
+  .hud-tile.accent2 .hud-value { color: var(--indigo-light); }
+
+  /* PUZZLE BOARD */
+  .puzzle-board-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  #puzzle-board {
+    width: 100%;
+    aspect-ratio: 1;
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-strong);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .puzzle-piece {
+    position: absolute;
+    cursor: grab;
+    overflow: hidden;
+    border-radius: 3px;
+    transition: box-shadow 0.15s, transform 0.05s;
+    will-change: transform;
+    touch-action: none;
+  }
+  .puzzle-piece:hover {
+    z-index: 10;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+  }
+  .puzzle-piece.dragging {
+    cursor: grabbing;
+    z-index: 1000;
+    box-shadow: 0 0 0 3px var(--indigo), 0 12px 40px rgba(0,0,0,0.6);
+    transform: scale(1.06);
+    transition: box-shadow 0.1s;
+  }
+  .puzzle-piece.correct {
+    box-shadow: 0 0 0 2.5px var(--green), 0 0 12px rgba(74,222,128,0.25);
+  }
+  .puzzle-piece.correct.dragging {
+    box-shadow: 0 0 0 3px var(--indigo), 0 12px 40px rgba(0,0,0,0.6);
+  }
+
+  .puzzle-piece canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .puzzle-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* ── WIN OVERLAY ── */
+  #win-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,11,24,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #win-overlay.active { display: flex; }
+
+  .win-card {
+    background: rgba(15,20,40,0.95);
+    border: 1px solid var(--border-strong);
+    border-radius: 24px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .win-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    display: block;
+    animation: bounce 0.6s 0.3s ease both;
+  }
+  @keyframes bounce {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .win-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--indigo-light), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .win-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 28px;
+  }
+
+  .win-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .win-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 8px;
+  }
+  .win-stat .stat-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .win-stat .stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  /* LEADERBOARD */
+  .leaderboard {
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .lb-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .lb-header::before {
+    content: '🏆';
+    font-size: 0.9rem;
+  }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    transition: background 0.15s;
+  }
+  .lb-row.new-record { border-color: var(--amber); background: rgba(251,191,36,0.06); }
+
+  .lb-rank {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+  .lb-rank.gold   { color: #fbbf24; }
+  .lb-rank.silver { color: #94a3b8; }
+  .lb-rank.bronze { color: #cd7c3e; }
+
+  .lb-time {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  .lb-meta {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+  }
+  .lb-diff {
+    font-size: 0.7rem;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 100px;
+    padding: 2px 8px;
+    color: var(--indigo-light);
+  }
+
+  .lb-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 20px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--indigo), #4f46e5);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 28px rgba(99,102,241,0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.12);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.25);
+  }
+  .btn-danger:hover {
+    background: rgba(248,113,113,0.2);
+  }
+
+  .btn-cyan {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(34,211,238,0.25);
+  }
+  .btn-cyan:hover {
+    box-shadow: 0 4px 28px rgba(34,211,238,0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-full { width: 100%; }
+
+  .btn-icon {
+    font-size: 1rem;
+  }
+
+  /* ── LOADING FLASH ── */
+  .flash-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  /* ── CONFETTI ── */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1999;
+    display: none;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    body { padding: 16px 12px 32px; }
+    .diff-options { padding: 0 16px 24px; gap: 8px; }
+    #screen-difficulty .diff-header { padding: 24px 16px 0; }
+    .preview-container { padding: 16px; }
+    .win-card { padding: 28px 20px; }
+    .win-stats { gap: 8px; }
+    .puzzle-actions { flex-wrap: wrap; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Face<span>Puzzle</span></div>
+  <div class="header-badge">Scramble Yourself</div>
+</header>
+
+<!-- ══════════════ CAMERA SCREEN ══════════════ -->
+<div id="screen-camera" class="screen active">
+  <div class="card" style="overflow:hidden;">
+    <div style="padding: 24px 28px 16px;">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:4px;">Position your face</h2>
+      <p style="color:var(--text-muted);font-size:0.875rem;">Centre your face in the frame, then take a snapshot to create your puzzle.</p>
+    </div>
+    <div style="padding: 0 20px 20px;">
+      <div class="camera-wrap" id="camera-wrap">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="scan-overlay" id="scan-overlay">
+          <div class="scan-line"></div>
+          <div class="corner-marks">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+          </div>
+        </div>
+        <div class="camera-permission-denied" id="camera-denied">
+          <div class="icon">📷</div>
+          <h3>Camera Access Denied</h3>
+          <p>FacePuzzle needs your camera to capture a snapshot. Please allow camera access in your browser settings and refresh the page.</p>
+        </div>
+      </div>
+      <p class="camera-hint" id="camera-hint">Waiting for camera permission…</p>
+    </div>
+    <div style="padding: 0 20px 24px;">
+      <button id="btn-snap" class="btn btn-primary btn-full" disabled>
+        <span class="btn-icon">📸</span> Take Photo
+      </button>
+    </div>
+  </div>
+  <canvas id="snap-canvas" style="display:none;"></canvas>
+</div>
+
+<!-- ══════════════ DIFFICULTY SCREEN ══════════════ -->
+<div id="screen-difficulty" class="screen">
+  <div class="card">
+    <div class="diff-header">
+      <h2>Choose Difficulty</h2>
+      <p>Pick a grid size — harder means more pieces.</p>
+    </div>
+    <div class="preview-container">
+      <canvas id="preview-canvas"></canvas>
+    </div>
+    <div class="diff-options">
+      <button class="diff-btn" data-grid="3">
+        <span class="grid-icon">⬛</span>
+        <span class="diff-name">Easy</span>
+        <span class="diff-sub">3 × 3 · 9 pieces</span>
+      </button>
+      <button class="diff-btn" data-grid="4">
+        <span class="grid-icon">🔲</span>
+        <span class="diff-name">Medium</span>
+        <span class="diff-sub">4 × 4 · 16 pieces</span>
+      </button>
+      <button class="diff-btn" data-grid="5">
+        <span class="grid-icon">▪️</span>
+        <span class="diff-name">Hard</span>
+        <span class="diff-sub">5 × 5 · 25 pieces</span>
+      </button>
+    </div>
+    <div class="retake-row">
+      <button id="btn-retake" class="btn btn-ghost">
+        <span class="btn-icon">🔄</span> Retake Photo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PUZZLE SCREEN ══════════════ -->
+<div id="screen-puzzle" class="screen">
+  <div class="hud">
+    <div class="hud-tile accent">
+      <div class="hud-label">Time</div>
+      <div class="hud-value" id="hud-time">00:00.0</div>
+    </div>
+    <div class="hud-tile accent2">
+      <div class="hud-label">Moves</div>
+      <div class="hud-value" id="hud-moves">0</div>
+    </div>
+    <div class="hud-tile">
+      <div class="hud-label">Placed</div>
+      <div class="hud-value" id="hud-placed">0/<span id="hud-total">0</span></div>
+    </div>
+  </div>
+
+  <div class="puzzle-board-wrap">
+    <div id="puzzle-board"></div>
+  </div>
+
+  <div class="puzzle-actions">
+    <button id="btn-new-photo" class="btn btn-ghost" style="flex:1;">
+      <span class="btn-icon">📷</span> New Photo
+    </button>
+    <button id="btn-play-again" class="btn btn-ghost" style="flex:1;">
+      <span class="btn-icon">🔀</span> Play Again
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ WIN OVERLAY ══════════════ -->
+<div id="win-overlay">
+  <div class="win-card">
+    <span class="win-emoji">🎉</span>
+    <div class="win-title">Puzzle Solved!</div>
+    <div class="win-subtitle" id="win-subtitle">You scrambled and unscrambled your own face.</div>
+
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" id="win-time" style="color:var(--cyan);">—</div>
+      </div>
+      <div class="win-stat">
+        <div class="stat-label">Moves</div>
+        <div class="stat-value" id="win-moves" style="color:var(--indigo-light);">—</div>
+      </div>
+      <div class="win-stat">
+        <div class="stat-label">Grid</div>
+        <div class="stat-value" id="win-diff" style="color:var(--text);">—</div>
+      </div>
+    </div>
+
+    <div class="leaderboard">
+      <div class="lb-header">Best Times</div>
+      <div id="leaderboard-list"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button id="btn-win-play-again" class="btn btn-primary btn-full">
+        <span class="btn-icon">🔀</span> Play Again (Same Difficulty)
+      </button>
+      <button id="btn-win-new-photo" class="btn btn-cyan btn-full">
+        <span class="btn-icon">📷</span> New Photo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Flash & Confetti -->
+<div class="flash-overlay" id="flash-overlay"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ──────────────────────────────────────
+     STATE
+  ────────────────────────────────────── */
+  const state = {
+    photoData: null,       // ImageData / dataURL
+    gridSize: 3,
+    pieces: [],            // { id, correctPos, currentPos, canvas }
+    boardSize: 0,
+    pieceSize: 0,
+    timerStart: null,
+    timerInterval: null,
+    elapsed: 0,
+    moves: 0,
+    drag: {
+      active: false,
+      pieceEl: null,
+      pieceId: null,
+      startX: 0,
+      startY: 0,
+      origLeft: 0,
+      origTop: 0,
+    },
+    won: false,
+    lastSavedRank: null,
+  };
+
+  /* ──────────────────────────────────────
+     ELEMENTS
+  ────────────────────────────────────── */
+  const $   = id => document.getElementById(id);
+  const video         = $('video');
+  const snapCanvas    = $('snap-canvas');
+  const previewCanvas = $('preview-canvas');
+  const puzzleBoard   = $('puzzle-board');
+  const scanOverlay   = $('scan-overlay');
+  const cameraDenied  = $('camera-denied');
+  const cameraHint    = $('camera-hint');
+  const flashOverlay  = $('flash-overlay');
+  const confettiCanvas= $('confetti-canvas');
+
+  /* ──────────────────────────────────────
+     SCREEN MANAGEMENT
+  ────────────────────────────────────── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  /* ──────────────────────────────────────
+     CAMERA
+  ────────────────────────────────────── */
+  async function initCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showCameraError('Camera API not supported in this browser.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        video.play();
+        $('btn-snap').disabled = false;
+        cameraHint.textContent = 'Camera ready — centre your face and tap Take Photo.';
+        scanOverlay.classList.add('active');
+      };
+    } catch (err) {
+      showCameraError(err);
+    }
+  }
+
+  function showCameraError(err) {
+    cameraDenied.style.display = 'flex';
+    video.style.display = 'none';
+    scanOverlay.style.display = 'none';
+    cameraHint.textContent = '';
+    $('btn-snap').disabled = true;
+    console.warn('Camera error:', err);
+  }
+
+  function stopCamera() {
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    }
+  }
+
+  /* ──────────────────────────────────────
+     FLASH ANIMATION
+  ────────────────────────────────────── */
+  function doFlash(cb) {
+    flashOverlay.style.display = 'block';
+    flashOverlay.style.opacity = '1';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flashOverlay.style.transition = 'opacity 0.5s ease';
+        flashOverlay.style.opacity = '0';
+        setTimeout(() => {
+          flashOverlay.style.display = 'none';
+          flashOverlay.style.transition = '';
+          if (cb) cb();
+        }, 520);
+      });
+    });
+  }
+
+  /* ──────────────────────────────────────
+     SNAP PHOTO
+  ────────────────────────────────────── */
+  function snapPhoto() {
+    const size = Math.min(video.videoWidth, video.videoHeight);
+    const ox = (video.videoWidth  - size) / 2;
+    const oy = (video.videoHeight - size) / 2;
+
+    snapCanvas.width  = size;
+    snapCanvas.height = size;
+    const ctx = snapCanvas.getContext('2d');
+    ctx.save();
+    ctx.translate(size, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, ox, oy, size, size, 0, 0, size, size);
+    ctx.restore();
+
+    state.photoData = snapCanvas.toDataURL('image/jpeg', 0.92);
+
+    doFlash(() => {
+      stopCamera();
+      showScreen('screen-difficulty');
+      drawPreview();
+    });
+  }
+
+  function drawPreview() {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(240, img.width);
+      previewCanvas.width  = s;
+      previewCanvas.height = s;
+      const ctx = previewCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, s, s);
+    };
+    img.src = state.photoData;
+  }
+
+  /* ──────────────────────────────────────
+     PUZZLE GENERATION
+  ────────────────────────────────────── */
+  function startPuzzle(gridSize) {
+    state.gridSize = gridSize;
+    state.won      = false;
+    state.moves    = 0;
+    clearTimer();
+
+    const img = new Image();
+    img.onload = () => {
+      buildPieces(img);
+      renderBoard();
+      showScreen('screen-puzzle');
+      startTimer();
+      updateHUD();
+    };
+    img.src = state.photoData;
+  }
+
+  function buildPieces(img) {
+    const g = state.gridSize;
+    const src = img.width; // square
+    const piecePixels = src / g;
+
+    state.pieces = [];
+
+    for (let row = 0; row < g; row++) {
+      for (let col = 0; col < g; col++) {
+        const id = row * g + col;
+        const pc = document.createElement('canvas');
+        pc.width  = piecePixels;
+        pc.height = piecePixels;
+        const pctx = pc.getContext('2d');
+        pctx.drawImage(img, col * piecePixels, row * piecePixels, piecePixels, piecePixels, 0, 0, piecePixels, piecePixels);
+
+        state.pieces.push({
+          id,
+          correctPos: id,
+          currentPos: id,
+          canvas: pc,
+        });
+      }
+    }
+
+    // Scramble until solvable and not already solved
+    let order = Array.from({length: g * g}, (_, i) => i);
+    do { shuffle(order); } while (!isSolvable(order, g) || isSolved(order));
+
+    order.forEach((correctId, pos) => {
+      state.pieces.find(p => p.id === correctId).currentPos = pos;
+    });
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function isSolved(order) {
+    return order.every((v, i) => v === i);
+  }
+
+  // N-puzzle solvability check (works for square puzzles without blank)
+  // For image puzzles (all pieces present, no blank), we use parity of
+  // permutation inversions; even permutation = solvable.
+  function isSolvable(order, g) {
+    let inv = 0;
+    for (let i = 0; i < order.length; i++) {
+      for (let j = i + 1; j < order.length; j++) {
+        if (order[i] > order[j]) inv++;
+      }
+    }
+    // For puzzles without a blank tile, parity of inversions must be even
+    // This ensures at least one valid swap sequence reaches the solution
+    return inv % 2 === 0;
+  }
+
+  /* ──────────────────────────────────────
+     BOARD RENDERING
+  ────────────────────────────────────── */
+  function renderBoard() {
+    puzzleBoard.innerHTML = '';
+    const g = state.gridSize;
+    const boardEl = puzzleBoard;
+    const boardSize = boardEl.offsetWidth || 500;
+    state.boardSize = boardSize;
+    state.pieceSize = boardSize / g;
+
+    state.pieces.forEach(piece => {
+      const el = document.createElement('div');
+      el.className = 'puzzle-piece';
+      el.dataset.id = piece.id;
+
+      const sz = state.pieceSize;
+      el.style.width  = sz + 'px';
+      el.style.height = sz + 'px';
+
+      const col = piece.currentPos % g;
+      const row = Math.floor(piece.currentPos / g);
+      el.style.left = (col * sz) + 'px';
+      el.style.top  = (row * sz) + 'px';
+
+      // Scale canvas to fit cell
+      const img = document.createElement('img');
+      img.style.width  = '100%';
+      img.style.height = '100%';
+      img.style.display = 'block';
+      img.src = piece.canvas.toDataURL();
+      img.draggable = false;
+      el.appendChild(img);
+
+      if (piece.currentPos === piece.correctPos) {
+        el.classList.add('correct');
+      }
+
+      attachDrag(el, piece.id);
+      boardEl.appendChild(el);
+    });
+  }
+
+  function getPieceEl(id) {
+    return puzzleBoard.querySelector(`.puzzle-piece[data-id="${id}"]`);
+  }
+
+  function positionPiece(el, pos) {
+    const g = state.gridSize;
+    const sz = state.pieceSize;
+    const col = pos % g;
+    const row = Math.floor(pos / g);
+    el.style.left = (col * sz) + 'px';
+    el.style.top  = (row * sz) + 'px';
+  }
+
+  /* ──────────────────────────────────────
+     DRAG & DROP
+  ────────────────────────────────────── */
+  function attachDrag(el, pieceId) {
+    el.addEventListener('mousedown',  e => dragStart(e, el, pieceId, false));
+    el.addEventListener('touchstart', e => dragStart(e, el, pieceId, true), { passive: false });
+  }
+
+  function getClientXY(e, isTouch) {
+    if (isTouch) {
+      const t = e.touches[0] || e.changedTouches[0];
+      return { x: t.clientX, y: t.clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function dragStart(e, el, pieceId, isTouch) {
+    if (state.won) return;
+    e.preventDefault();
+    const { x, y } = getClientXY(e, isTouch);
+
+    state.drag.active    = true;
+    state.drag.pieceEl   = el;
+    state.drag.pieceId   = pieceId;
+    state.drag.startX    = x;
+    state.drag.startY    = y;
+    state.drag.origLeft  = parseFloat(el.style.left);
+    state.drag.origTop   = parseFloat(el.style.top);
+
+    el.classList.add('dragging');
+    el.style.zIndex = 1000;
+
+    if (isTouch) {
+      document.addEventListener('touchmove',  onTouchMove, { passive: false });
+      document.addEventListener('touchend',   onTouchEnd);
+      document.addEventListener('touchcancel',onTouchEnd);
+    } else {
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup',   onMouseUp);
+    }
+  }
+
+  function onMouseMove(e) { dragMove(e.clientX, e.clientY); }
+  function onTouchMove(e) {
+    e.preventDefault();
+    const t = e.touches[0];
+    dragMove(t.clientX, t.clientY);
+  }
+
+  function dragMove(cx, cy) {
+    if (!state.drag.active) return;
+    const dx = cx - state.drag.startX;
+    const dy = cy - state.drag.startY;
+    const el = state.drag.pieceEl;
+    const newLeft = state.drag.origLeft + dx;
+    const newTop  = state.drag.origTop  + dy;
+    el.style.left = newLeft + 'px';
+    el.style.top  = newTop  + 'px';
+  }
+
+  function onMouseUp(e)   { dragEnd(e.clientX, e.clientY); }
+  function onTouchEnd(e)  {
+    const t = e.changedTouches[0];
+    dragEnd(t.clientX, t.clientY);
+  }
+
+  function dragEnd(cx, cy) {
+    if (!state.drag.active) return;
+    state.drag.active = false;
+
+    document.removeEventListener('mousemove',  onMouseMove);
+    document.removeEventListener('mouseup',    onMouseUp);
+    document.removeEventListener('touchmove',  onTouchMove);
+    document.removeEventListener('touchend',   onTouchEnd);
+    document.removeEventListener('touchcancel',onTouchEnd);
+
+    const el = state.drag.pieceEl;
+    el.classList.remove('dragging');
+    el.style.zIndex = '';
+
+    const rect   = puzzleBoard.getBoundingClientRect();
+    const relX   = cx - rect.left;
+    const relY   = cy - rect.top;
+    const g      = state.gridSize;
+    const sz     = state.pieceSize;
+
+    const dropCol = Math.floor(relX / sz);
+    const dropRow = Math.floor(relY / sz);
+
+    // Bounds check
+    if (dropCol < 0 || dropCol >= g || dropRow < 0 || dropRow >= g) {
+      // Snap back
+      positionPiece(el, state.pieces.find(p => p.id === state.drag.pieceId).currentPos);
+      return;
+    }
+
+    const dropPos  = dropRow * g + dropCol;
+    const dragId   = state.drag.pieceId;
+    const dragPiece = state.pieces.find(p => p.id === dragId);
+
+    if (dropPos === dragPiece.currentPos) {
+      positionPiece(el, dragPiece.currentPos);
+      return;
+    }
+
+    // Find piece at drop position
+    const targetPiece = state.pieces.find(p => p.currentPos === dropPos);
+
+    // Swap positions
+    const fromPos = dragPiece.currentPos;
+    dragPiece.currentPos   = dropPos;
+    if (targetPiece) {
+      targetPiece.currentPos = fromPos;
+      const targetEl = getPieceEl(targetPiece.id);
+      positionPiece(targetEl, fromPos);
+      updateCorrectClass(targetEl, targetPiece);
+    }
+
+    positionPiece(el, dropPos);
+    updateCorrectClass(el, dragPiece);
+
+    state.moves++;
+    updateHUD();
+    checkWin();
+  }
+
+  function updateCorrectClass(el, piece) {
+    if (piece.currentPos === piece.correctPos) {
+      el.classList.add('correct');
+    } else {
+      el.classList.remove('correct');
+    }
+  }
+
+  /* ──────────────────────────────────────
+     TIMER
+  ────────────────────────────────────── */
+  function startTimer() {
+    state.timerStart = performance.now();
+    state.timerInterval = setInterval(tickTimer, 100);
+  }
+
+  function tickTimer() {
+    state.elapsed = performance.now() - state.timerStart;
+    $('hud-time').textContent = formatTime(state.elapsed);
+  }
+
+  function clearTimer() {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+    state.elapsed = 0;
+    $('hud-time').textContent = '00:00.0';
+  }
+
+  function formatTime(ms) {
+    const total = Math.floor(ms / 100);
+    const tenths = total % 10;
+    const secs   = Math.floor(total / 10) % 60;
+    const mins   = Math.floor(total / 600);
+    return `${pad2(mins)}:${pad2(secs)}.${tenths}`;
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  /* ──────────────────────────────────────
+     HUD UPDATE
+  ────────────────────────────────────── */
+  function updateHUD() {
+    const correct = state.pieces.filter(p => p.currentPos === p.correctPos).length;
+    $('hud-moves').textContent  = state.moves;
+    $('hud-placed').textContent = correct;
+    $('hud-total').textContent  = state.pieces.length;
+  }
+
+  /* ──────────────────────────────────────
+     WIN DETECTION
+  ────────────────────────────────────── */
+  function checkWin() {
+    const allCorrect = state.pieces.every(p => p.currentPos === p.correctPos);
+    if (!allCorrect) return;
+
+    state.won = true;
+    clearInterval(state.timerInterval);
+
+    const finalTime  = state.elapsed;
+    const finalMoves = state.moves;
+    const diff       = `${state.gridSize}×${state.gridSize}`;
+
+    setTimeout(() => {
+      showWinScreen(finalTime, finalMoves, diff);
+      launchConfetti();
+    }, 300);
+  }
+
+  /* ──────────────────────────────────────
+     WIN SCREEN
+  ────────────────────────────────────── */
+  function showWinScreen(ms, moves, diff) {
+    $('win-time').textContent  = formatTime(ms);
+    $('win-moves').textContent = moves;
+    $('win-diff').textContent  = diff;
+    $('win-subtitle').textContent = `Solved a ${diff} puzzle in ${formatTime(ms)} with ${moves} moves.`;
+
+    const rank = saveScore(ms, moves, diff);
+    state.lastSavedRank = rank;
+
+    renderLeaderboard(rank);
+    $('win-overlay').classList.add('active');
+  }
+
+  /* ──────────────────────────────────────
+     LEADERBOARD / LOCALSTORAGE
+  ────────────────────────────────────── */
+  const LS_KEY = 'facepuzzle_scores_v2';
+
+  function loadScores() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveScores(scores) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(scores)); } catch {}
+  }
+
+  function saveScore(ms, moves, diff) {
+    const scores = loadScores();
+    const entry = {
+      ms,
+      moves,
+      diff,
+      date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }),
+    };
+    scores.push(entry);
+    scores.sort((a, b) => a.ms - b.ms);
+    const top5 = scores.slice(0, 5);
+    saveScores(top5);
+    const rank = top5.findIndex(s => s === entry || (s.ms === entry.ms && s.moves === entry.moves && s.diff === entry.diff && s.date === entry.date));
+    return rank;
+  }
+
+  function renderLeaderboard(newRank) {
+    const scores = loadScores();
+    const list = $('leaderboard-list');
+    list.innerHTML = '';
+
+    if (!scores.length) {
+      list.innerHTML = '<div class="lb-empty">No scores yet — this will be your first!</div>';
+      return;
+    }
+
+    const medals = ['gold','silver','bronze'];
+    scores.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'lb-row' + (i === newRank ? ' new-record' : '');
+      const rankClass = medals[i] || '';
+      row.innerHTML = `
+        <div class="lb-rank ${rankClass}">#${i+1}</div>
+        <div class="lb-time">${formatTime(s.ms)}</div>
+        <div class="lb-meta">${s.date} · ${s.moves}mv</div>
+        <div class="lb-diff">${s.diff}</div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  /* ──────────────────────────────────────
+     CONFETTI
+  ────────────────────────────────────── */
+  function launchConfetti() {
+    confettiCanvas.style.display = 'block';
+    confettiCanvas.width  = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    const ctx = confettiCanvas.getContext('2d');
+
+    const colors = ['#6366f1','#22d3ee','#4ade80','#fbbf24','#f472b6','#a78bfa'];
+    const pieces = Array.from({length: 120}, () => ({
+      x: Math.random() * confettiCanvas.width,
+      y: -10 - Math.random() * 100,
+      w: 6 + Math.random() * 8,
+      h: 10 + Math.random() * 8,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.2,
+    }));
+
+    let frame;
+    let ttl = 180;
+
+    function tick() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      pieces.forEach(p => {
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.rot += p.vr;
+        p.vy += 0.04;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.min(1, ttl / 40);
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      ttl--;
+      if (ttl > 0 && pieces.some(p => p.y < confettiCanvas.height + 20)) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        confettiCanvas.style.display = 'none';
+        cancelAnimationFrame(frame);
+      }
+    }
+    tick();
+  }
+
+  /* ──────────────────────────────────────
+     BOARD RESIZE OBSERVER
+  ────────────────────────────────────── */
+  const ro = new ResizeObserver(() => {
+    if ($('screen-puzzle').classList.contains('active') && state.pieces.length) {
+      const newSize = puzzleBoard.offsetWidth;
+      if (Math.abs(newSize - state.boardSize) > 2) {
+        state.boardSize = newSize;
+        state.pieceSize = newSize / state.gridSize;
+        repositionPieces();
+      }
+    }
+  });
+  ro.observe(puzzleBoard);
+
+  function repositionPieces() {
+    state.pieces.forEach(piece => {
+      const el = getPieceEl(piece.id);
+      if (!el) return;
+      const sz = state.pieceSize;
+      el.style.width  = sz + 'px';
+      el.style.height = sz + 'px';
+      positionPiece(el, piece.currentPos);
+    });
+  }
+
+  /* ──────────────────────────────────────
+     BUTTON HANDLERS
+  ────────────────────────────────────── */
+  $('btn-snap').addEventListener('click', () => {
+    if (video.readyState < 2) return;
+    snapPhoto();
+  });
+
+  $('btn-retake').addEventListener('click', () => {
+    showScreen('screen-camera');
+    initCamera();
+  });
+
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const grid = parseInt(btn.dataset.grid, 10);
+      startPuzzle(grid);
+    });
+  });
+
+  $('btn-new-photo').addEventListener('click', () => {
+    clearTimer();
+    showScreen('screen-camera');
+    initCamera();
+  });
+
+  $('btn-play-again').addEventListener('click', () => {
+    clearTimer();
+    startPuzzle(state.gridSize);
+  });
+
+  $('btn-win-play-again').addEventListener('click', () => {
+    $('win-overlay').classList.remove('active');
+    confettiCanvas.style.display = 'none';
+    clearTimer();
+    startPuzzle(state.gridSize);
+  });
+
+  $('btn-win-new-photo').addEventListener('click', () => {
+    $('win-overlay').classList.remove('active');
+    confettiCanvas.style.display = 'none';
+    clearTimer();
+    showScreen('screen-camera');
+    initCamera();
+  });
+
+  /* ──────────────────────────────────────
+     INIT
+  ────────────────────────────────────── */
+  initCamera();
+
+})();
+</script>
+</body>
+</html>
