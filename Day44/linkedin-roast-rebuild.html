@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>git diff — your-linkedin-profile.md</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d13;
+    --bg-alt: #0d1117;
+    --panel: rgba(255,255,255,0.035);
+    --panel-border: rgba(255,255,255,0.09);
+    --panel-hi: rgba(255,255,255,0.06);
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-faint: #565f6d;
+    --red: #f85149;
+    --red-bg: rgba(248,81,73,0.10);
+    --red-bg-strong: rgba(248,81,73,0.16);
+    --green: #3fb950;
+    --green-bg: rgba(63,185,80,0.10);
+    --green-bg-strong: rgba(63,185,80,0.16);
+    --amber: #e3b341;
+    --amber-bg: rgba(227,179,65,0.12);
+    --teal: #39c5cf;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background: radial-gradient(ellipse 1200px 800px at 50% -10%, rgba(63,185,80,0.06), transparent), var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height:100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+  ::selection{ background: var(--amber-bg); color: var(--amber); }
+
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* ---------- terminal chrome header ---------- */
+  .term-bar{
+    display:flex; align-items:center; gap:8px;
+    background: var(--bg-alt);
+    border: 1px solid var(--panel-border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 10px 14px;
+  }
+  .dot{ width:11px; height:11px; border-radius:50%; }
+  .dot.r{ background:#f85149; } .dot.y{ background:#e3b341; } .dot.g{ background:#3fb950; }
+  .term-title{
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    margin-left: 8px;
+  }
+
+  .hero{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-top:none;
+    border-radius: 0 0 10px 10px;
+    padding: 34px 30px 28px;
+    backdrop-filter: blur(14px);
+  }
+  .hero-eyebrow{
+    font-family: var(--font-mono); font-size: 12px; color: var(--green);
+    letter-spacing: 0.04em;
+  }
+  .hero-eyebrow::before{ content: '$ '; color: var(--text-faint); }
+  .hero h1{
+    font-family: var(--font-display); font-weight: 700; font-size: clamp(28px,4vw,42px);
+    margin-top: 10px; line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 .strike{ color: var(--red); text-decoration: line-through; text-decoration-thickness:2px; opacity:0.55; }
+  .hero p.sub{ color: var(--text-dim); margin-top: 14px; font-size: 15px; max-width: 640px; line-height:1.6; }
+
+  .score-row{ display:flex; gap:22px; margin-top:28px; flex-wrap:wrap; align-items:center; }
+  .ring-box{ display:flex; align-items:center; gap:14px; }
+  .ring-label{ font-family: var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; }
+  .ring-val{ font-family: var(--font-display); font-weight:700; font-size:22px; }
+  .arrow-sep{ color: var(--text-faint); font-family: var(--font-mono); font-size:20px; }
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex; gap:4px; margin-top:24px; overflow-x:auto;
+    border-bottom: 1px solid var(--panel-border); padding-bottom:0;
+  }
+  .tab{
+    font-family: var(--font-mono); font-size: 13px; color: var(--text-dim);
+    background: transparent; border:none; cursor:pointer;
+    padding: 12px 16px; white-space:nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .tab:hover{ color: var(--text); }
+  .tab.active{ color: var(--amber); border-bottom-color: var(--amber); }
+  .tab .num{ color: var(--text-faint); margin-right:6px; }
+  .tab.active .num{ color: var(--amber); }
+
+  .panel{ display:none; padding-top: 26px; animation: fadeUp .35s ease; }
+  .panel.active{ display:block; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  h2.section-title{
+    font-family: var(--font-display); font-size: 22px; font-weight:700;
+    margin-bottom: 4px; display:flex; align-items:center; gap:10px;
+  }
+  .section-sub{ color: var(--text-dim); font-size:13.5px; margin-bottom:22px; line-height:1.6; }
+
+  /* ---------- report card ---------- */
+  .card{
+    background: var(--panel); border:1px solid var(--panel-border); border-radius:12px;
+    padding:20px 22px; margin-bottom:16px;
+  }
+  .card-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .card-title{ font-family: var(--font-display); font-weight:600; font-size:16px; }
+  .card-quote{
+    font-family: var(--font-mono); font-size:12.5px; color: var(--text-dim);
+    background: rgba(255,255,255,0.03); border-left: 2px solid var(--red);
+    padding: 8px 12px; margin-top:10px; border-radius: 0 6px 6px 0;
+  }
+  .score-chip{
+    font-family: var(--font-mono); font-weight:700; font-size:14px;
+    padding: 5px 12px; border-radius: 20px; white-space:nowrap;
+    background: var(--red-bg); color: var(--red); border:1px solid rgba(248,81,73,0.3);
+  }
+  .score-chip.mid{ background: var(--amber-bg); color: var(--amber); border-color: rgba(227,179,65,0.3); }
+  .score-chip.good{ background: var(--green-bg); color: var(--green); border-color: rgba(63,185,80,0.3); }
+
+  .reaction{ font-size:13.5px; color:var(--text-dim); margin-top:10px; font-style:italic; }
+  .breakdown{ margin-top:14px; display:grid; gap:10px; }
+  .brk-line{ font-size:13.5px; line-height:1.6; display:flex; gap:8px; }
+  .brk-line .ico{ flex-shrink:0; }
+  .brk-line b{ color: var(--text); }
+
+  .overall-band{
+    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+    background: linear-gradient(135deg, rgba(248,81,73,0.08), rgba(227,179,65,0.06));
+    border:1px solid var(--panel-border); border-radius:12px; padding:22px 26px; margin-top: 6px;
+  }
+  .overall-band .num{ font-family:var(--font-display); font-weight:700; font-size:40px; color:var(--red); }
+  .overall-band .lbl{ font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* ---------- diff blocks (signature element) ---------- */
+  .diff{
+    font-family: var(--font-mono); font-size: 12.8px; line-height: 1.75;
+    background: var(--bg-alt); border:1px solid var(--panel-border); border-radius:10px;
+    overflow:hidden; margin: 10px 0 18px;
+  }
+  .diff-header{
+    padding: 8px 14px; background: rgba(255,255,255,0.03); color: var(--text-faint);
+    font-size:11px; letter-spacing:0.03em; border-bottom:1px solid var(--panel-border);
+    display:flex; justify-content:space-between;
+  }
+  .diff-line{ display:flex; padding: 4px 14px; white-space:pre-wrap; word-break:break-word; }
+  .diff-line.rem{ background: var(--red-bg); }
+  .diff-line.add{ background: var(--green-bg); }
+  .diff-gutter{ width:18px; flex-shrink:0; user-select:none; font-weight:700; }
+  .diff-line.rem .diff-gutter{ color: var(--red); }
+  .diff-line.add .diff-gutter{ color: var(--green); }
+  .diff-line.rem .diff-text{ color: #ffb3ae; }
+  .diff-line.add .diff-text{ color: #b6f2c0; }
+
+  /* ---------- headline option cards ---------- */
+  .opt-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:14px; margin-top:14px; }
+  .opt-card{ background:var(--panel); border:1px solid var(--panel-border); border-radius:12px; padding:18px; }
+  .opt-tag{ font-family:var(--font-mono); font-size:10.5px; color:var(--teal); text-transform:uppercase; letter-spacing:0.06em; }
+  .opt-text{ font-size:14px; margin-top:10px; line-height:1.55; color:var(--text); }
+  .opt-when{ font-size:12px; color:var(--text-dim); margin-top:12px; border-top:1px dashed var(--panel-border); padding-top:10px; }
+
+  .kw-list{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .kw{ font-family:var(--font-mono); font-size:11px; background: var(--amber-bg); color: var(--amber); padding:4px 9px; border-radius:6px; }
+
+  /* about rewrite block */
+  .about-block{ background: var(--panel); border:1px solid var(--panel-border); border-radius:12px; padding:22px; margin-top:14px; }
+  .about-part{ margin-bottom:16px; }
+  .about-part:last-child{ margin-bottom:0; }
+  .about-label{ font-family:var(--font-mono); font-size:10.5px; color:var(--green); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+  .about-part p{ font-size:14.5px; line-height:1.7; color: var(--text); }
+  .fillme{ color: var(--amber); border-bottom:1px dashed var(--amber); }
+
+  /* skills grid */
+  .skill-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:14px; }
+  @media (max-width:640px){ .skill-cols{ grid-template-columns: 1fr; } }
+  .skill-col-title{ font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+  .skill-tag{ display:flex; align-items:center; gap:8px; font-size:13.5px; padding:7px 10px; border-radius:8px; margin-bottom:6px; }
+  .skill-tag.add{ background: var(--green-bg); }
+  .skill-tag.rem{ background: var(--red-bg); text-decoration:line-through; opacity:0.7; }
+  .rank{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); width:16px; }
+  .pin-row{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--panel-border); font-size:13px; color:var(--text-dim); }
+  .pin-row b{ color: var(--amber); }
+
+  /* scorecard table */
+  .sc-table{ width:100%; border-collapse:collapse; margin-top:6px; }
+  .sc-table th{ text-align:left; font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em; padding:10px 8px; border-bottom:1px solid var(--panel-border); }
+  .sc-table td{ padding:14px 8px; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px; }
+  .bar-cell{ display:flex; align-items:center; gap:8px; }
+  .bar-track{ flex:1; height:6px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; max-width:140px; }
+  .bar-fill{ height:100%; border-radius:4px; }
+  .bar-fill.before{ background: var(--red); }
+  .bar-fill.after{ background: var(--green); }
+  .delta{ font-family:var(--font-mono); font-weight:700; color:var(--green); font-size:13px; }
+
+  /* 7 day plan */
+  .day-card{ background:var(--panel); border:1px solid var(--panel-border); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+  .day-head{ display:flex; align-items:center; gap:12px; padding:16px 20px; cursor:pointer; user-select:none; }
+  .day-num{ font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--bg); background:var(--amber); width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .day-title{ font-family:var(--font-display); font-weight:600; font-size:15px; flex:1; }
+  .day-chev{ color:var(--text-faint); transition:transform .2s ease; font-family:var(--font-mono); }
+  .day-card.open .day-chev{ transform:rotate(90deg); }
+  .day-body{ display:none; padding:0 20px 20px 62px; font-size:13.5px; color:var(--text-dim); line-height:1.7; }
+  .day-card.open .day-body{ display:block; }
+  .day-body ul{ margin:8px 0 8px 18px; }
+  .day-body .post-box{
+    background:var(--bg-alt); border:1px solid var(--panel-border); border-radius:8px; padding:14px 16px;
+    font-family:var(--font-body); color:var(--text); margin-top:10px; white-space:pre-wrap; font-size:13.5px; line-height:1.65;
+  }
+  .char-count{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); margin-top:6px; text-align:right; }
+  .msg-box{ background:var(--bg-alt); border:1px solid var(--panel-border); border-radius:8px; padding:12px 14px; font-family:var(--font-mono); font-size:12.5px; color:var(--teal); margin-top:8px; }
+  .formula{ font-family:var(--font-mono); font-size:12.5px; color:var(--amber); background:var(--amber-bg); padding:8px 12px; border-radius:8px; margin-top:8px; display:inline-block; }
+  .checklist{ list-style:none; margin:10px 0 0; }
+  .checklist li{ display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; }
+  .checklist li::before{ content:'☐'; color:var(--teal); flex-shrink:0; font-family:var(--font-mono); }
+
+  /* summary card */
+  .summary-card{
+    background: linear-gradient(160deg, rgba(63,185,80,0.08), rgba(10,13,19,0.4));
+    border: 1px solid var(--panel-border); border-radius: 16px; padding: 30px 32px;
+    position:relative; overflow:hidden;
+  }
+  .summary-card::before{
+    content:'</>'; position:absolute; right:-10px; top:-20px; font-family:var(--font-mono);
+    font-size:120px; color:rgba(255,255,255,0.02); font-weight:700;
+  }
+  .summary-eyebrow{ font-family:var(--font-mono); font-size:11px; color:var(--green); text-transform:uppercase; letter-spacing:0.06em; }
+  .summary-headline{ font-family:var(--font-display); font-weight:700; font-size:20px; margin-top:8px; line-height:1.4; }
+  .summary-scores{ display:flex; gap:24px; margin-top:20px; align-items:center; }
+  .summary-num-block .num{ font-family:var(--font-display); font-weight:700; font-size:32px; }
+  .summary-num-block.before .num{ color:var(--red); }
+  .summary-num-block.after .num{ color:var(--green); }
+  .summary-num-block .lbl{ font-family:var(--font-mono); font-size:10px; color:var(--text-faint); text-transform:uppercase; }
+  .summary-list{ margin-top:20px; }
+  .summary-list li{ font-size:13.5px; margin-bottom:8px; color:var(--text-dim); list-style:none; padding-left:22px; position:relative; }
+  .summary-list li::before{ content: attr(data-n); position:absolute; left:0; font-family:var(--font-mono); color:var(--red); font-weight:700; }
+  .summary-final{ margin-top:18px; padding-top:16px; border-top:1px dashed var(--panel-border); font-size:13.5px; color:var(--text); }
+  .summary-final b{ color:var(--amber); }
+  .copy-btn{
+    margin-top:20px; font-family:var(--font-mono); font-size:12.5px; background:var(--amber); color:#1a1000;
+    border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:700;
+    display:inline-flex; align-items:center; gap:8px; transition: transform .12s ease;
+  }
+  .copy-btn:hover{ transform: translateY(-1px); }
+  .copy-btn:active{ transform: translateY(0); }
+  .copy-btn.copied{ background: var(--green); }
+
+  footer.note{ margin-top:36px; font-size:12px; color:var(--text-faint); text-align:center; font-family:var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="term-bar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span class="term-title">git diff — rishi/linkedin-profile.md</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">linkedin --roast --rebuild --plan</div>
+    <h1>Your profile isn't broken. It's just <span class="strike">invisible</span> unreadable.</h1>
+    <p class="sub">You've got real full-stack chops — React, Node, Express, Mongo, a live internship, shipped projects. None of it is landing, because every section is written the way 10,000 other MERN-stack profiles are written. Here's the full diff.</p>
+
+    <div class="score-row">
+      <div class="ring-box">
+        <svg width="58" height="58" viewBox="0 0 58 58">
+          <circle cx="29" cy="29" r="24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+          <circle cx="29" cy="29" r="24" fill="none" stroke="#f85149" stroke-width="6" stroke-linecap="round"
+            stroke-dasharray="150.8" stroke-dashoffset="87.5" transform="rotate(-90 29 29)"/>
+        </svg>
+        <div><div class="ring-label">Before</div><div class="ring-val" style="color:var(--red)">42/100</div></div>
+      </div>
+      <div class="arrow-sep">→</div>
+      <div class="ring-box">
+        <svg width="58" height="58" viewBox="0 0 58 58">
+          <circle cx="29" cy="29" r="24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+          <circle cx="29" cy="29" r="24" fill="none" stroke="#3fb950" stroke-width="6" stroke-linecap="round"
+            stroke-dasharray="150.8" stroke-dashoffset="30.16" transform="rotate(-90 29 29)"/>
+        </svg>
+        <div><div class="ring-label">After</div><div class="ring-val" style="color:var(--green)">80/100</div></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-panel="p1"><span class="num">01</span>Roast</button>
+      <button class="tab" data-panel="p2"><span class="num">02</span>Rebuild</button>
+      <button class="tab" data-panel="p3"><span class="num">03</span>Scorecard</button>
+      <button class="tab" data-panel="p4"><span class="num">04</span>7-Day Plan</button>
+      <button class="tab" data-panel="p5"><span class="num">05</span>Summary Card</button>
+    </div>
+  </div>
+
+  <!-- ================= PANEL 1: ROAST ================= -->
+  <div class="panel active" id="p1">
+    <h2 class="section-title">Profile Report Card</h2>
+    <p class="section-sub">Scored the way a recruiter actually reads it — fast, judgmental, and gone in three seconds if you don't earn the next one.</p>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Headline</div>
+        <div class="score-chip">4/10</div>
+      </div>
+      <div class="reaction">Recruiter's 3-second read: "Another MERN template. Next."</div>
+      <div class="card-quote">"Building Scalable Web Applications | Open to Opportunities"</div>
+      <div class="breakdown">
+        <div class="brk-line"><span class="ico">❌</span><span><b>The problem:</b> "Building Scalable Web Applications" is a claim everyone makes and no one proves. "Open to Opportunities" burns prime character-count real estate announcing your job status instead of your value — LinkedIn already shows this with the green banner.</span></div>
+        <div class="brk-line"><span class="ico">🧠</span><span><b>Why it hurts:</b> This exact headline pattern — role, tech pipe-list, vague value phrase, "open to work" — shows up on thousands of junior/intern profiles. Recruiters pattern-match it instantly and mentally file it under "generic."</span></div>
+        <div class="brk-line"><span class="ico">🔍</span><span><b>Invisible cost:</b> Headlines are what shows up in search results and connection requests, before anyone clicks in. If it doesn't differentiate you in the preview, you lose the click before the profile is ever opened.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">About — First 2 Lines</div>
+        <div class="score-chip">3/10</div>
+      </div>
+      <div class="reaction">This is ALL a recruiter sees before "see more." Most never click it.</div>
+      <div class="card-quote">"I am a passionate Full Stack Web Developer with a strong interest in building modern, responsive, and scalable web applications."</div>
+      <div class="breakdown">
+        <div class="brk-line"><span class="ico">❌</span><span><b>The problem:</b> Opens with "I am" (weakest possible sentence opener) and "passionate" — the single most overused word in About sections on the entire platform.</span></div>
+        <div class="brk-line"><span class="ico">🧠</span><span><b>Why it hurts:</b> No hook, no specific claim, nothing that makes someone stop scrolling. It reads exactly like the first line of every other student/intern About section.</span></div>
+        <div class="brk-line"><span class="ico">🔍</span><span><b>Invisible cost:</b> Lines 3-8 of your About might genuinely be good — but almost no one will ever read them if lines 1-2 don't earn the "see more" click first.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">About — Full Section</div>
+        <div class="score-chip">4/10</div>
+      </div>
+      <div class="reaction">"Same stack list as the headline. What's actually different about this person?"</div>
+      <div class="card-quote">"...Let's connect and build something impactful together."</div>
+      <div class="breakdown">
+        <div class="brk-line"><span class="ico">❌</span><span><b>The problem:</b> The tech stack (HTML/CSS/JS/React/Node/Express/Mongo/Git) is listed here a <b>second time</b> after already appearing in the headline — and it'll appear a <b>third time</b> in Skills. Three sections, zero new information. No numbers, no proof, no specific project outcome. The CTA — "let's connect and build something impactful" — appears on a huge share of student profiles almost word for word.</span></div>
+        <div class="brk-line"><span class="ico">🧠</span><span><b>Why it hurts:</b> Recruiters and hiring managers are scanning for "why this candidate over the other 500 with the same stack." Restating tools isn't an answer to that question.</span></div>
+        <div class="brk-line"><span class="ico">🔍</span><span><b>Invisible cost:</b> This is the single highest-leverage block of text on your whole profile, and right now it's spending its space on redundancy instead of differentiation.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Experience</div>
+        <div class="score-chip mid">5/10</div>
+      </div>
+      <div class="reaction">"Solid action verbs. But I can't tell if this was a weekend project or a real feature."</div>
+      <div class="card-quote">"Improved UI/UX and optimized application performance."</div>
+      <div class="breakdown">
+        <div class="brk-line"><span class="ico">❌</span><span><b>The problem:</b> Every one of your 5 bullets uses a strong action verb — genuinely good structure — but none of them has a single number. "Improved," "optimized," "developed" with zero scope attached is the most common unquantified claim on LinkedIn, and it reads as filler even when it's true.</span></div>
+        <div class="brk-line"><span class="ico">🧠</span><span><b>Why it hurts:</b> Hiring managers scan Experience for evidence of impact, not a list of tasks. Unquantified bullets could describe 90% of interns — nothing here signals this internship was any different from another.</span></div>
+        <div class="brk-line"><span class="ico">🔍</span><span><b>Invisible cost:</b> Without scope (how many APIs, how many users, what % faster), a recruiter can't tell if this was a 2-week toy build or a 6-month production feature — and ambiguity gets skipped in a fast scan, not investigated.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Skills & Keywords</div>
+        <div class="score-chip mid">5/10</div>
+      </div>
+      <div class="reaction">"Correct core stack. But so does every other MERN profile in this search."</div>
+      <div class="breakdown">
+        <div class="brk-line"><span class="ico">❌</span><span><b>The problem:</b> Your 10 skills are accurate but table-stakes — every MERN-stack junior lists exactly this set. There's nothing here that signals growth trajectory (TypeScript, testing, deployment, system design) and no evidence of a pinned/prioritized order.</span></div>
+        <div class="brk-line"><span class="ico">🧠</span><span><b>Why it hurts:</b> LinkedIn's search ranking weights skill order and specificity. An identical skill list to thousands of other profiles doesn't help you rank — it just ties you with everyone else.</span></div>
+        <div class="brk-line"><span class="ico">🔍</span><span><b>Invisible cost:</b> You show up in the search, but tied for last place. Recruiters using more advanced filters (e.g. "TypeScript" or "AWS") never see you at all.</span></div>
+      </div>
+    </div>
+
+    <div class="overall-band">
+      <div><div class="lbl">Overall Profile Strength</div><div class="num">42/100</div></div>
+      <div style="max-width:340px; font-size:13px; color:var(--text-dim);">Real skills, real internship, real projects — buried under generic phrasing that makes you indistinguishable from every other MERN-stack junior applying to the same roles.</div>
+    </div>
+  </div>
+
+  <!-- ================= PANEL 2: REBUILD ================= -->
+  <div class="panel" id="p2">
+    <h2 class="section-title">The Rebuild</h2>
+    <p class="section-sub">Every rewrite below explains the strategy behind it — copy it, but understand <i>why</i> it works so you can write the next one yourself.</p>
+
+    <h3 style="font-family:var(--font-display); font-size:16px; margin-bottom:6px;">Headline — 3 options</h3>
+    <p class="section-sub" style="margin-bottom:10px;">Formula: <b style="color:var(--text)">[Role/Identity] | [Who I Help or What I Do] | [Proof or Differentiator]</b></p>
+    <div class="opt-grid">
+      <div class="opt-card">
+        <div class="opt-tag">01 · Keyword-optimized</div>
+        <div class="opt-text">Full Stack Developer (MERN) | React.js, Node.js, Express.js, MongoDB | Building REST APIs & Production-Style Web Apps</div>
+        <div class="opt-when"><b>Use when:</b> you want to rank in recruiter search filters. Front-loads exact keywords recruiters type into LinkedIn's search bar.</div>
+      </div>
+      <div class="opt-card">
+        <div class="opt-tag">02 · Value-proposition</div>
+        <div class="opt-text">I build full-stack web apps end-to-end — React interfaces, Node/Express APIs, MongoDB data layers | Full Stack Developer</div>
+        <div class="opt-when"><b>Use when:</b> targeting startups/hiring managers who read headlines, not just filter by them — leads with outcome, not tool list.</div>
+      </div>
+      <div class="opt-card">
+        <div class="opt-tag">03 · Authority</div>
+        <div class="opt-text">Full Stack Developer | Shipping MERN-stack projects & exploring AI-assisted development | Documenting the build</div>
+        <div class="opt-when"><b>Use when:</b> posting regularly and want the headline to reinforce a content identity, not just a job title.</div>
+      </div>
+    </div>
+    <p style="font-size:13px; color:var(--text-dim); margin-top:12px;"><b style="color:var(--amber)">Pick Option 1</b> right now while actively job-hunting — search visibility matters more than narrative until you're getting profile views. Switch to Option 2 or 3 once you start posting.</p>
+
+    <h3 style="font-family:var(--font-display); font-size:16px; margin:30px 0 4px;">About Section — full rewrite</h3>
+    <div class="about-block">
+      <div class="about-part">
+        <div class="about-label">Line 1-2 · The Hook</div>
+        <p>Most "Full Stack Developer" profiles are a list of tools. Mine is a list of things I've actually shipped.</p>
+      </div>
+      <div class="about-part">
+        <div class="about-label">Line 3-5 · The Story</div>
+        <p>I build web apps end-to-end — React on the front end, Node/Express APIs underneath, MongoDB holding the data — with a growing focus on AI-assisted development and prompt engineering. I care less about listing every tool in the MERN stack and more about whether something I built actually works when a real person opens it.</p>
+      </div>
+      <div class="about-part">
+        <div class="about-label">Line 6-8 · Proof</div>
+        <p>I've built <span class="fillme">[add: number]</span> full-stack projects, including an e-commerce platform with cart and auth flows, and multiple portfolio/full-stack apps with RESTful APIs and JWT-based authentication. As a Full Stack Development Intern at RK Nexus Technologies, I helped build and ship <span class="fillme">[add: number]</span> features across <span class="fillme">[add: number]</span> RESTful API endpoints, working in Git/GitHub alongside <span class="fillme">[add: team size]</span> other developers.</p>
+      </div>
+      <div class="about-part">
+        <div class="about-label">Last line · CTA</div>
+        <p>Hiring for a Full Stack or Software Engineer role, or want to talk MERN, AI-assisted dev, or prompt engineering? Message me, or check my Featured section for live project links.</p>
+      </div>
+    </div>
+    <div class="kw-list">
+      <span class="kw">Full Stack Developer</span><span class="kw">React.js</span><span class="kw">Node.js</span><span class="kw">Express.js</span><span class="kw">MongoDB</span><span class="kw">REST APIs</span><span class="kw">JWT authentication</span><span class="kw">MERN stack</span><span class="kw">AI-assisted development</span><span class="kw">prompt engineering</span><span class="kw">Software Engineer</span>
+    </div>
+    <p style="font-size:12px; color:var(--text-faint); margin-top:8px; font-family:var(--font-mono);">The bracketed fields aren't filler — fill them in with your real numbers before publishing. Never leave them blank or guess.</p>
+
+    <h3 style="font-family:var(--font-display); font-size:16px; margin:30px 0 4px;">Experience — Top Entry, bullet by bullet</h3>
+    <p class="section-sub" style="margin-bottom:6px;">Same 5 bullets, restructured to lead with achievement and scope — every bracket is a number only you can fill in.</p>
+
+    <div class="diff">
+      <div class="diff-header"><span>experience.md</span><span>bullet 1/5</span></div>
+      <div class="diff-line rem"><span class="diff-gutter">−</span><span class="diff-text">Developed responsive full-stack web applications using React.js, Node.js, Express.js, and MongoDB.</span></div>
+      <div class="diff-line add"><span class="diff-gutter">+</span><span class="diff-text">Built and shipped [X] full-stack web applications end-to-end using the MERN stack, from database schema design to deployed React front-ends.</span></div>
+    </div>
+    <div class="diff">
+      <div class="diff-header"><span>experience.md</span><span>bullet 2/5</span></div>
+      <div class="diff-line rem"><span class="diff-gutter">−</span><span class="diff-text">Built RESTful APIs for seamless frontend-backend integration.</span></div>
+      <div class="diff-line add"><span class="diff-gutter">+</span><span class="diff-text">Designed and built [X] RESTful API endpoints in Express.js/Node.js, handling [validation/error-handling detail] to connect frontend and backend cleanly.</span></div>
+    </div>
+    <div class="diff">
+      <div class="diff-header"><span>experience.md</span><span>bullet 3/5</span></div>
+      <div class="diff-line rem"><span class="diff-gutter">−</span><span class="diff-text">Implemented authentication and CRUD functionality.</span></div>
+      <div class="diff-line add"><span class="diff-gutter">+</span><span class="diff-text">Implemented JWT-based authentication and full CRUD functionality, securing [X] user-facing routes and enabling [feature — e.g. accounts, saved carts, order history].</span></div>
+    </div>
+    <div class="diff">
+      <div class="diff-header"><span>experience.md</span><span>bullet 4/5</span></div>
+      <div class="diff-line rem"><span class="diff-gutter">−</span><span class="diff-text">Collaborated on project development using Git and GitHub.</span></div>
+      <div class="diff-line add"><span class="diff-gutter">+</span><span class="diff-text">Collaborated with a team of [X] developers using Git/GitHub feature-branch workflows, including [X] pull requests reviewed or merged.</span></div>
+    </div>
+    <div class="diff">
+      <div class="diff-header"><span>experience.md</span><span>bullet 5/5</span></div>
+      <div class="diff-line rem"><span class="diff-gutter">−</span><span class="diff-text">Improved UI/UX and optimized application performance.</span></div>
+      <div class="diff-line add"><span class="diff-gutter">+</span><span class="diff-text">Improved [specific screen/flow] UI/UX and reduced [load time / a measured pain point] by [X%] through [what you actually changed].</span></div>
+    </div>
+    <p style="font-size:12px; color:var(--text-faint); font-family:var(--font-mono);">No number = no bullet. If you genuinely don't have a figure for one, use a scope word instead ("across 3 core pages," "for the full checkout flow") rather than leaving it vague.</p>
+
+    <h3 style="font-family:var(--font-display); font-size:16px; margin:30px 0 4px;">Skills Recommendations</h3>
+    <div class="skill-cols">
+      <div>
+        <div class="skill-col-title" style="color:var(--green)">Add — priority order</div>
+        <div class="skill-tag add"><span class="rank">1</span> TypeScript</div>
+        <div class="skill-tag add"><span class="rank">2</span> Next.js</div>
+        <div class="skill-tag add"><span class="rank">3</span> Redux / React Query</div>
+        <div class="skill-tag add"><span class="rank">4</span> Docker</div>
+        <div class="skill-tag add"><span class="rank">5</span> AWS / Cloud Deployment</div>
+        <div class="skill-tag add"><span class="rank">6</span> Jest / Testing Library</div>
+        <div class="skill-tag add"><span class="rank">7</span> GitHub Actions (CI/CD)</div>
+        <div class="skill-tag add"><span class="rank">8</span> System Design Fundamentals</div>
+        <div class="skill-tag add"><span class="rank">9</span> Tailwind CSS</div>
+        <div class="skill-tag add"><span class="rank">10</span> GraphQL <i style="color:var(--text-faint)">(only if used)</i></div>
+      </div>
+      <div>
+        <div class="skill-col-title" style="color:var(--red)">Consolidate / cut</div>
+        <div class="skill-tag rem">Git + GitHub → merge into one</div>
+        <p style="font-size:12.5px; color:var(--text-dim); margin-top:10px; line-height:1.6; text-decoration:none;">Nothing in your current 10 is irrelevant — the fix isn't removal, it's making room. Merging "Git" and "GitHub" into a single "Git/GitHub" entry frees a slot for a higher-signal skill like TypeScript without losing anything.</p>
+      </div>
+    </div>
+    <div class="pin-row">📌 Pin to top 3: <b>JavaScript</b>, <b>React.js</b>, <b>Node.js</b> — the exact combination recruiters filter by most for full-stack junior roles.</div>
+  </div>
+
+  <!-- ================= PANEL 3: SCORECARD ================= -->
+  <div class="panel" id="p3">
+    <h2 class="section-title">Before vs After Scorecard</h2>
+    <p class="section-sub">Same profile, same real experience — just rewritten to show proof instead of listing tools.</p>
+
+    <table class="sc-table">
+      <thead><tr><th>Section</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Headline</td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">4</span><div class="bar-track"><div class="bar-fill before" style="width:40%"></div></div></td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">8</span><div class="bar-track"><div class="bar-fill after" style="width:80%"></div></div></td>
+          <td class="delta">+4</td>
+        </tr>
+        <tr>
+          <td>About (Hook)</td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">3</span><div class="bar-track"><div class="bar-fill before" style="width:30%"></div></div></td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">8</span><div class="bar-track"><div class="bar-fill after" style="width:80%"></div></div></td>
+          <td class="delta">+5</td>
+        </tr>
+        <tr>
+          <td>About (Full)</td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">4</span><div class="bar-track"><div class="bar-fill before" style="width:40%"></div></div></td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">8</span><div class="bar-track"><div class="bar-fill after" style="width:80%"></div></div></td>
+          <td class="delta">+4</td>
+        </tr>
+        <tr>
+          <td>Experience</td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">5</span><div class="bar-track"><div class="bar-fill before" style="width:50%"></div></div></td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">8</span><div class="bar-track"><div class="bar-fill after" style="width:80%"></div></div></td>
+          <td class="delta">+3</td>
+        </tr>
+        <tr>
+          <td>Skills / Keywords</td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">5</span><div class="bar-track"><div class="bar-fill before" style="width:50%"></div></div></td>
+          <td class="bar-cell"><span style="font-family:var(--font-mono)">8</span><div class="bar-track"><div class="bar-fill after" style="width:80%"></div></div></td>
+          <td class="delta">+3</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="overall-band" style="margin-top:22px; background: linear-gradient(135deg, rgba(63,185,80,0.10), rgba(227,179,65,0.06));">
+      <div><div class="lbl">Overall Profile Strength</div><div class="num" style="color:var(--green)">42 → 80 <span style="font-size:20px; color:var(--text-dim)">/100</span></div></div>
+      <div style="max-width:340px; font-size:13px; color:var(--text-dim);"><b style="color:var(--green)">+38 points</b> — almost entirely from adding proof and scope to claims that were already true. Nothing here is fabricated; every gain comes from specificity you already have or can measure.</div>
+    </div>
+  </div>
+
+  <!-- ================= PANEL 4: 7-DAY PLAN ================= -->
+  <div class="panel" id="p4">
+    <h2 class="section-title">7-Day LinkedIn Activation Plan</h2>
+    <p class="section-sub">Profile edits alone don't get you seen. Click each day to expand.</p>
+
+    <div class="day-card open">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">1</div><div class="day-title">Make all profile changes</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <ul class="checklist">
+          <li>Replace headline with Option 1 (keyword-optimized)</li>
+          <li>Swap in the new About section, with your real numbers filled into the brackets</li>
+          <li>Rewrite all 5 experience bullets with your actual figures</li>
+          <li>Add the 10 recommended skills, merge Git/GitHub into one entry</li>
+          <li>Pin JavaScript, React.js, Node.js to the top 3</li>
+          <li>Add a Featured section with links to your e-commerce and portfolio projects (live link or GitHub repo)</li>
+          <li>Check that your profile photo and banner look intentional, not default</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">2</div><div class="day-title">Publish Post #1 — "I rebuilt my LinkedIn"</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <p>Post your rebuild story. The hook needs to make people want to compare their own profile against yours — that's what drives comments.</p>
+        <div class="post-box">I just rewrote my entire LinkedIn profile — and realized recruiters were skipping it in about 3 seconds.
+
+Here's what I got wrong:
+
+→ My headline listed my tech stack and nothing else. So did 10,000 other MERN developer profiles.
+→ My About section repeated the same stack list from my headline. Zero new information for anyone reading it.
+→ Every bullet in my experience had zero numbers. "Improved performance" means nothing without a %.
+
+Here's what I fixed:
+→ Rewrote my About to lead with what I've actually built, not what tools I know
+→ Added real scope to every experience bullet
+→ Reordered my skills to match what recruiters actually filter for
+
+Small changes. But they're the difference between a profile that gets read and one that gets scrolled past.
+
+What's one LinkedIn mistake you keep seeing on junior dev profiles? Drop it below 👇</div>
+        <div class="char-count">~890 characters — under the 1300 limit</div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">3</div><div class="day-title">Send 10 strategic connection requests</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <p><b style="color:var(--text)">Who to target:</b></p>
+        <ul>
+          <li>Technical recruiters or talent partners at Series A–C product startups building with JS/React/Node</li>
+          <li>Engineering managers or tech leads at companies in the MERN ecosystem</li>
+          <li>Full-stack developers 1–3 years ahead of you — mentorship signal, and they often reshare good posts</li>
+          <li>Alumni from your college now working as SWEs or full-stack devs</li>
+        </ul>
+        <p style="margin-top:8px;"><b style="color:var(--text)">Connection message template:</b></p>
+        <div class="msg-box">Hi [Name] — I'm a full-stack dev (MERN) building projects and looking to connect with people in the space. Would love to follow your work.</div>
+        <div class="char-count">~150 characters — under the 300 limit</div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">4</div><div class="day-title">Comment on 5 posts in your target space</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <p>Use the Value Comment formula on posts from the people you just connected with, or from active voices in web dev / JS:</p>
+        <div class="formula">Agree + Add Insight + Ask a Question</div>
+        <p style="margin-top:10px;">Example, on a post about React performance: <i>"Agree that memoization gets overused — I ran into the same issue optimizing a MongoDB-backed dashboard, where the real bottleneck was the query, not the render. Curious how you're profiling render cost vs. network cost on your end?"</i></p>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">5</div><div class="day-title">Publish Post #2 — lessons-learned / hot take</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <div class="post-box">Everyone learning MERN stack builds the same 3 projects: a to-do app, a clone of something, and an e-commerce site.
+
+I built all three. Here's the one lesson that actually mattered:
+
+The hard part was never React or Express. It was the stuff nobody's tutorial covers — structuring MongoDB schemas so queries don't get messy at scale, handling auth edge cases, and debugging why a "working" API breaks the moment real data hits it.
+
+Tutorials teach you the syntax. Projects teach you the failure modes. I didn't actually understand REST APIs until I broke one in production (well — my own local "production").
+
+If you're early in your dev journey: build past the tutorial. The bugs after it's "done" are where the real learning is.
+
+What's the project that taught you the most — not the one that looked best on your resume?</div>
+        <div class="char-count">~950 characters — under the 1300 limit</div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">6</div><div class="day-title">Engage with every comment + 5 more connections</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <p>Reply to every comment on both posts within a few hours — LinkedIn's algorithm rewards early engagement velocity, and it keeps your post surfacing in more feeds. Send 5 more connection requests using the same template from Day 3, this time targeting people who engaged with your posts.</p>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-head" onclick="toggleDay(this)"><div class="day-num">7</div><div class="day-title">Review profile views & connection acceptance rate</div><div class="day-chev">▸</div></div>
+      <div class="day-body">
+        <p><b style="color:var(--text)">What the numbers mean:</b></p>
+        <ul>
+          <li><b>Profile views up sharply</b> → your posts are working; keep the same posting cadence and topics</li>
+          <li><b>Profile views flat, low acceptance rate</b> → your headline/photo still isn't earning the click from search or requests — revisit Day 1</li>
+          <li><b>High views, low post engagement</b> → people are checking your profile out but the content isn't prompting comments — make your next hook sharper or ask a more specific question</li>
+          <li><b>High acceptance rate</b> → your connection targeting and message template are working; scale up the volume next week</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PANEL 5: SUMMARY CARD ================= -->
+  <div class="panel" id="p5">
+    <h2 class="section-title">What I Learned Today</h2>
+    <p class="section-sub">A shareable card — screenshot it and post it as your Day 2 content, or use it as-is.</p>
+
+    <div class="summary-card" id="summaryCard">
+      <div class="summary-eyebrow">linkedin rebuild — day 0</div>
+      <div class="summary-headline">I let AI roast my LinkedIn profile today. Here's what changed:</div>
+      <div class="summary-scores">
+        <div class="summary-num-block before"><div class="num">42</div><div class="lbl">Before</div></div>
+        <div class="arrow-sep">→</div>
+        <div class="summary-num-block after"><div class="num">80</div><div class="lbl">After</div></div>
+      </div>
+      <ul class="summary-list">
+        <li data-n="1.">My headline listed my tech stack — the same stack every other MERN developer lists.</li>
+        <li data-n="2.">My About section repeated that same stack a second time instead of proving anything new.</li>
+        <li data-n="3.">Every experience bullet had a strong action verb and zero numbers.</li>
+      </ul>
+      <div class="summary-final">The #1 thing that made the biggest difference: <b>replacing "what tools I know" with "what I actually built" — everywhere.</b></div>
+      <button class="copy-btn" onclick="copySummary()">📋 Copy as text</button>
+    </div>
+  </div>
+
+  <footer class="note">roast complete — nothing above was invented, only your own experience, rewritten with proof.</footer>
+</div>
+
+<script>
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if(!btn) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+    window.scrollTo({top: document.querySelector('.tabs').offsetTop - 10, behavior:'smooth'});
+  });
+
+  function toggleDay(headEl){
+    const card = headEl.parentElement;
+    card.classList.toggle('open');
+  }
+
+  function copySummary(){
+    const text = `I let AI roast my LinkedIn profile today. Here's what changed:
+
+Before: 42/100
+After: 80/100
+
+Top 3 mistakes I was making:
+1. My headline listed my tech stack — the same stack every other MERN developer lists.
+2. My About section repeated that same stack a second time instead of proving anything new.
+3. Every experience bullet had a strong action verb and zero numbers.
+
+The #1 thing that made the biggest difference: replacing "what tools I know" with "what I actually built" — everywhere.`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 Copy as text'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+</script>
+</body>
+</html>
