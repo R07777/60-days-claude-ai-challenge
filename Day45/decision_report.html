@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Report — Full Stack vs Split Focus</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-main:#0f0f14;
+    --bg-card:#1a1a24;
+    --bg-card-alt:#1e1e2e;
+    --text-primary:#f0f0f5;
+    --text-secondary:#8888a0;
+    --accent-green:#34d399;
+    --accent-red:#f87171;
+    --accent-blue:#60a5fa;
+    --accent-gold:#fbbf24;
+    --accent-purple:#a78bfa;
+    --border-subtle:rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg-main);
+    color:var(--text-primary);
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    padding:32px 16px 60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+  header{
+    text-align:center;
+    padding:24px 8px 32px;
+  }
+  header h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 8px;
+    letter-spacing:0.5px;
+  }
+  header .subtitle{
+    font-size:16px;
+    color:var(--text-secondary);
+    margin-bottom:6px;
+  }
+  header .date{
+    font-size:12px;
+    color:var(--text-secondary);
+  }
+  .gradient-line{
+    height:2px;
+    margin-top:20px;
+    background:linear-gradient(90deg,var(--accent-blue),var(--accent-purple),var(--accent-gold));
+    border-radius:2px;
+  }
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--border-subtle);
+    border-radius:16px;
+    padding:28px;
+    margin-bottom:28px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3);
+    border-left:4px solid var(--accent-blue);
+    transition:transform 0.2s ease;
+  }
+  .card:hover{transform:translateY(-2px);}
+  .section-title{
+    font-size:20px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin:0 0 16px;
+  }
+  .body-text{font-size:15px;line-height:1.7;color:var(--text-primary);}
+  .label{
+    font-size:12px;
+    font-weight:600;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+    letter-spacing:0.5px;
+    margin-bottom:4px;
+  }
+  /* Section colors */
+  #s1{border-left-color:var(--accent-blue);}
+  #s1 .section-title{color:var(--accent-blue);}
+  #s2 .section-title{color:var(--accent-green);}
+  .option-card{border-left-color:var(--accent-green);}
+  #s3{border-left-color:var(--accent-purple);}
+  #s3 .section-title{color:var(--accent-purple);}
+  #s4{border-left-color:var(--accent-blue);}
+  #s4 .section-title{color:var(--accent-blue);}
+  #s5{border-left-color:var(--accent-red);}
+  #s5 .section-title{color:var(--accent-red);}
+  #s6{border-left-color:var(--accent-green);}
+  #s6 .section-title{color:var(--accent-green);}
+  #s7{
+    border-left-color:var(--accent-gold);
+    background:var(--bg-card-alt);
+    padding:36px 28px;
+    box-shadow:0 0 20px rgba(251,191,36,0.15), 0 4px 24px rgba(0,0,0,0.3);
+  }
+  #s7 .section-title{color:var(--accent-gold);}
+  #s8{border-left-color:var(--accent-gold);}
+  #s8 .section-title{color:var(--accent-gold);}
+
+  .opt-block{
+    background:var(--bg-card-alt);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:16px;
+    border:1px solid var(--border-subtle);
+  }
+  .opt-block:last-child{margin-bottom:0;}
+  .opt-name{font-size:16px;font-weight:700;margin-bottom:10px;}
+  .opt-row{margin-bottom:10px;}
+  .opt-row:last-child{margin-bottom:0;}
+  .tag-green{color:var(--accent-green);font-weight:600;}
+  .tag-red{color:var(--accent-red);font-weight:600;}
+  .tag-blue{color:var(--accent-blue);font-weight:600;}
+
+  ul.plain{padding-left:20px;margin:8px 0;}
+  ul.plain li{margin-bottom:6px;line-height:1.6;font-size:15px;}
+
+  .bias-tag{
+    display:inline-block;
+    background:rgba(167,139,250,0.15);
+    color:var(--accent-purple);
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    margin:3px 4px 3px 0;
+  }
+
+  /* Matrix */
+  .matrix-row{display:flex;align-items:center;margin-bottom:14px;gap:12px;}
+  .matrix-label{width:38%;font-size:13px;color:var(--text-secondary);font-weight:500;}
+  .matrix-bars{width:62%;display:flex;flex-direction:column;gap:6px;}
+  .bar-container{
+    height:26px;
+    background:rgba(255,255,255,0.05);
+    border-radius:8px;
+    overflow:hidden;
+    position:relative;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding-right:8px;
+    color:#fff;
+    font-weight:700;
+    font-size:12px;
+    width:0%;
+    animation:growBar 0.8s ease-out forwards;
+  }
+  .bar-a{background:linear-gradient(90deg,#60a5fa,#3b82f6);}
+  .bar-b{background:linear-gradient(90deg,#34d399,#10b981);}
+  @keyframes growBar{
+    from{width:0%;}
+  }
+  .matrix-legend{display:flex;gap:20px;margin-bottom:20px;font-size:13px;}
+  .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(255,255,255,0.04);
+    padding:16px;
+    border-radius:10px;
+    margin-top:8px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .winner-badge{
+    background:rgba(251,191,36,0.15);
+    color:var(--accent-gold);
+    padding:2px 10px;
+    border-radius:20px;
+    font-size:12px;
+    margin-left:8px;
+  }
+
+  /* Premortem */
+  .pm-block{margin-bottom:20px;}
+  .pm-block:last-child{margin-bottom:0;}
+  .pm-title{font-weight:700;font-size:15px;margin-bottom:8px;color:var(--accent-red);}
+
+  /* 7 day plan */
+  .day-row{
+    display:flex;
+    gap:14px;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-subtle);
+    font-size:14px;
+  }
+  .day-row:last-child{border-bottom:none;}
+  .day-num{
+    min-width:70px;
+    font-weight:700;
+    color:var(--accent-green);
+    font-size:13px;
+  }
+
+  /* Verdict */
+  .verdict-name{
+    font-size:30px;
+    font-weight:800;
+    color:var(--accent-gold);
+    margin:0 0 12px;
+  }
+  .hard-truth{
+    font-style:italic;
+    color:var(--text-secondary);
+    margin-top:16px;
+    font-size:14px;
+  }
+
+  /* Shareable */
+  .share-row{display:flex;gap:16px;flex-wrap:wrap;}
+  .mini-card{
+    flex:1 1 200px;
+    background:var(--bg-card-alt);
+    padding:16px;
+    border-radius:12px;
+    border:1px solid var(--border-subtle);
+    min-height:160px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .mini-title{font-size:12px;text-transform:uppercase;color:var(--text-secondary);font-weight:600;margin-bottom:10px;letter-spacing:0.5px;}
+  .mini-body{font-size:14px;line-height:1.5;flex-grow:1;}
+  .watermark{font-size:10px;color:var(--text-secondary);text-align:right;margin-top:10px;opacity:0.7;}
+
+  footer{
+    text-align:center;
+    color:var(--text-secondary);
+    font-size:12px;
+    margin-top:40px;
+  }
+
+  @media(max-width:600px){
+    .card{padding:20px 16px;}
+    header h1{font-size:24px;}
+    .matrix-row{flex-direction:column;align-items:flex-start;}
+    .matrix-label{width:100%;margin-bottom:6px;}
+    .matrix-bars{width:100%;}
+    .share-row{flex-direction:column;}
+    .body-text{font-size:14px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>DECISION REPORT</h1>
+    <div class="subtitle">Full Stack Focus vs. Full Stack + AI/Prompt Engineering Split</div>
+    <div class="date">Generated July 15, 2026</div>
+    <div class="gradient-line"></div>
+  </header>
+
+  <!-- SECTION 1 -->
+  <div class="card" id="s1">
+    <div class="section-title">The Real Decision</div>
+    <div class="body-text">
+      This isn't "Full Stack vs. AI" — it's depth vs. breadth on a 1-year clock. The real trade-off: focusing narrow builds job-ready fundamentals faster, while splitting time chases the fear that AI moves too fast to sit out. It's hard because both fears are legitimate — falling behind technically, and falling behind on the fastest-growing trend in the field.
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="card" id="s2">
+    <div class="section-title">The Case For Each Option</div>
+
+    <div class="opt-block option-card">
+      <div class="opt-name">Option A — Full Stack Focus (AI as a tool, not a track)</div>
+      <div class="opt-row"><span class="tag-green">Strongest case:</span> Deep, demonstrable fundamentals in one year is exactly what hiring bars for SWE roles reward — a strong portfolio and GitHub profile beat a shallow spread across two skill sets.</div>
+      <div class="opt-row"><span class="tag-blue">Hidden upside:</span> Using AI tools daily while building real projects makes you an "AI-powered developer" by practice, not by title — you get both without diluting either.</div>
+      <div class="opt-row"><span class="tag-red">Biggest weakness:</span> If AI-specific roles (prompt engineering, AI product roles) explode faster than expected, you'll have practical fluency but no specialized credential or portfolio proof.</div>
+      <div class="opt-row"><span class="label">Best if you value:</span> Speed to job-readiness, strong fundamentals, low regret risk.</div>
+    </div>
+
+    <div class="opt-block option-card">
+      <div class="opt-name">Option B — Split Focus (Full Stack + AI/Prompt Engineering)</div>
+      <div class="opt-row"><span class="tag-green">Strongest case:</span> Positions you early in a genuinely fast-growing field, and could open doors that pure full stack developers won't have access to.</div>
+      <div class="opt-row"><span class="tag-blue">Hidden upside:</span> If timed well, "AI + Full Stack" could become a differentiator on a resume in a crowded junior dev market.</div>
+      <div class="opt-row"><span class="tag-red">Biggest weakness:</span> With one year and two focuses, you risk being competent at both and exceptional at neither — and weak fundamentals are the hardest thing to retrofit later.</div>
+      <div class="opt-row"><span class="label">Best if you value:</span> Optionality, hedging against a fast-moving market, being early to a trend.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="card" id="s3">
+    <div class="section-title">Assumption Buster</div>
+    <div class="label" style="margin-top:4px;">Assumptions you may be making</div>
+    <ul class="plain">
+      <li>That "AI/Prompt Engineering" is a stable, hireable job category in 1 year the same way "Full Stack Developer" is today.</li>
+      <li>That splitting time 50/50 gets you 50% skill in each, rather than a slower ramp in both due to context-switching costs.</li>
+      <li>That not specializing in AI now means missing it forever, rather than being able to layer it on top of strong fundamentals later.</li>
+    </ul>
+    <div class="label" style="margin-top:16px;">Biases at play</div>
+    <div style="margin-bottom:10px;">
+      <span class="bias-tag">FOMO / Loss Aversion</span>
+      <span class="bias-tag">Present Bias</span>
+    </div>
+    <div class="body-text" style="margin-top:8px;">
+      Loss aversion is driving the fear of "missing out" on AI more than a clear-eyed read of the job market. Present bias makes rapid AI headlines feel more urgent than the slower, provable payoff of fundamentals.
+    </div>
+    <div class="label" style="margin-top:16px;">What you're definitely ignoring</div>
+    <div class="body-text">You already answered your own question: your gut, your stated goal, and your reversibility analysis all point the same direction — but you're still treating this as unresolved.</div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="card" id="s4">
+    <div class="section-title">Decision Matrix</div>
+    <div class="matrix-legend">
+      <span><span class="legend-dot" style="background:#3b82f6;"></span>Option A — Full Stack Focus</span>
+      <span><span class="legend-dot" style="background:#10b981;"></span>Option B — Split Focus</span>
+    </div>
+
+    <div class="matrix-row">
+      <div class="matrix-label">Life/Career Upside</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:80%;animation-delay:0.1s;">8</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:60%;animation-delay:0.2s;">6</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Financial Safety</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:90%;animation-delay:0.3s;">9</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:50%;animation-delay:0.4s;">5</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Growth & Learning</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:70%;animation-delay:0.5s;">7</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:70%;animation-delay:0.6s;">7</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Stress Level (10=low)</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:80%;animation-delay:0.7s;">8</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:40%;animation-delay:0.8s;">4</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Reversibility (10=easy)</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:90%;animation-delay:0.9s;">9</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:60%;animation-delay:1.0s;">6</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Long-term Alignment</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:90%;animation-delay:1.1s;">9</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:60%;animation-delay:1.2s;">6</div></div>
+      </div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-label">Regret Risk (10=low)</div>
+      <div class="matrix-bars">
+        <div class="bar-container"><div class="bar-fill bar-a" style="width:80%;animation-delay:1.3s;">8</div></div>
+        <div class="bar-container"><div class="bar-fill bar-b" style="width:50%;animation-delay:1.4s;">5</div></div>
+      </div>
+    </div>
+
+    <div class="total-row">
+      <div>Option A — Full Stack Focus <span class="winner-badge">WINNER</span></div>
+      <div>58 / 70</div>
+    </div>
+    <div class="total-row" style="margin-top:10px;font-weight:600;opacity:0.85;">
+      <div>Option B — Split Focus</div>
+      <div>38 / 70</div>
+    </div>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="card" id="s5">
+    <div class="section-title">Premortem — It's 12 Months From Now And It Failed</div>
+
+    <div class="pm-block">
+      <div class="pm-title">Option A — Full Stack Focus</div>
+      <ul class="plain">
+        <li>You avoided AI tools entirely instead of using them as a productivity layer, and now look outdated next to AI-fluent peers.</li>
+        <li>You built projects but never publicly shipped or shared them, so the strong portfolio never translated into interviews.</li>
+        <li>You mistook "focus" for "narrow," and never touched the AI trend at all — even as a tool — leaving a visible gap.</li>
+      </ul>
+      <div class="opt-row"><span class="label">Early warning sign:</span> By month 6, your projects don't mention or use any AI tooling anywhere.</div>
+      <div class="opt-row"><span class="label">Prevention:</span> Explicitly integrate AI tools (Copilot, Claude, prompt-driven workflows) into your Full Stack projects from week 1 — it's not "either/or," it's fold AI in as you build.</div>
+    </div>
+
+    <div class="pm-block">
+      <div class="pm-title">Option B — Split Focus</div>
+      <ul class="plain">
+        <li>Neither skill reached a hireable bar — your GitHub shows partial projects in two directions instead of one strong body of work.</li>
+        <li>Context-switching between two learning tracks slowed both, and you lost momentum on each.</li>
+        <li>The "AI/Prompt Engineering" job category didn't mature into stable roles the way you expected, and the specialization didn't pay off.</li>
+      </ul>
+      <div class="opt-row"><span class="label">Early warning sign:</span> By month 3, you're context-switching weekly and neither skill has a shippable project yet.</div>
+      <div class="opt-row"><span class="label">Prevention:</span> If you go this route, sequence it — don't parallelize. Full Stack first, AI specialization second.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="card" id="s6">
+    <div class="section-title">7-Day Test Plan</div>
+    <div class="day-row"><div class="day-num">Day 1-2</div><div>Research 5-10 job postings for junior Full Stack roles — note how many mention AI-tool fluency vs. dedicated AI/prompt roles.</div></div>
+    <div class="day-row"><div class="day-num">Day 3-4</div><div>Run one small experiment: build a small feature using a Full Stack workflow paired with an AI coding assistant, and track how much AI actually speeds you up.</div></div>
+    <div class="day-row"><div class="day-num">Day 5-6</div><div>Have one conversation with a working developer or mentor about whether "AI/Prompt Engineering" is being hired as a standalone track or folded into SWE roles.</div></div>
+    <div class="day-row"><div class="day-num">Day 7</div><div>Decision day: if 80%+ of the job postings and your mentor conversation point to AI-as-a-skill rather than AI-as-a-title, commit fully to Option A.</div></div>
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="card" id="s7">
+    <div class="section-title">The Verdict</div>
+    <div class="verdict-name">Option A — Full Stack Focus</div>
+    <div class="body-text">
+      It wins because it matches your stated goal, your gut, and your own reversibility analysis — full stack fundamentals are hard to retrofit later, AI fluency isn't. Use AI daily as a productivity layer inside your projects, not as a second curriculum.
+    </div>
+    <div class="body-text" style="margin-top:10px;">
+      <span class="label">What could flip it:</span> Clear market evidence within your 7-day test that dedicated AI/prompt roles are hiring juniors directly — right now, that evidence doesn't yet exist for you.
+    </div>
+    <div class="hard-truth">You already knew the answer before this report — the fear of missing out was louder than the plan you actually had.</div>
+  </div>
+
+  <!-- SECTION 8 -->
+  <div class="card" id="s8">
+    <div class="section-title">Shareable Cards</div>
+    <div class="share-row">
+      <div class="mini-card">
+        <div class="mini-title">Matrix Summary</div>
+        <div class="mini-body">
+          Full Stack Focus: <strong style="color:var(--accent-blue);">58/70</strong><br>
+          Split Focus: <strong style="color:var(--accent-green);">38/70</strong>
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title">Verdict</div>
+        <div class="mini-body">
+          <strong style="color:var(--accent-gold);">Full Stack Focus wins.</strong><br>
+          Master the fundamentals. Use AI as your tool, not your second track.
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title">Share Hook</div>
+        <div class="mini-body">
+          "I almost split my focus chasing FOMO. Here's why depth beat breadth for my 1-year plan."<br><br>
+          <em style="color:var(--text-secondary);font-size:12px;">Build your own Decision Report →</em>
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built with Claude AI | ABTalks 60-Day Challenge</footer>
+</div>
+</body>
+</html>
