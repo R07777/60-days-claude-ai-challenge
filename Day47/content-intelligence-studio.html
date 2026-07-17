@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Intelligence Studio</title>
+<style>
+  :root{
+    --bg:#0A0C10;
+    --bg-elevated:#10141C;
+    --panel:#131826;
+    --panel-2:#161C2C;
+    --border:#212739;
+    --border-soft:#1A2032;
+    --text:#E8ECF4;
+    --muted:#8790A6;
+    --dim:#545D74;
+    --mint:#63E6BE;
+    --mint-dim:#2E5F51;
+    --violet:#B48CFF;
+    --violet-dim:#4B3B78;
+    --warn:#FFB454;
+    --danger:#FF6B81;
+    --danger-dim:#5A2530;
+    --mono: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,'Helvetica Neue',sans-serif;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(180,140,255,0.07), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(99,230,190,0.06), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--violet-dim);color:#fff;}
+  a{color:var(--mint);}
+  .hidden{display:none !important;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;
+    background:rgba(10,12,16,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    font-family:var(--mono);font-weight:700;font-size:15px;
+    color:var(--mint);letter-spacing:-0.5px;
+    padding:4px 8px;border:1px solid var(--mint-dim);border-radius:6px;
+    background:rgba(99,230,190,0.06);
+  }
+  .brand-name{font-weight:600;font-size:15px;letter-spacing:0.2px;}
+  .brand-sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:8px;}
+  .status-pill{
+    display:flex;align-items:center;gap:7px;
+    font-family:var(--mono);font-size:11px;color:var(--muted);
+    border:1px solid var(--border);padding:5px 10px;border-radius:20px;
+  }
+  .status-pill .pulse{width:7px;height:7px;border-radius:50%;background:var(--dim);}
+  .status-pill.live .pulse{background:var(--mint);box-shadow:0 0 0 0 rgba(99,230,190,0.6);animation:pulse 2s infinite;}
+  .status-pill.live{color:var(--mint);border-color:var(--mint-dim);}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(99,230,190,0.5);}
+    70%{box-shadow:0 0 0 8px rgba(99,230,190,0);}
+    100%{box-shadow:0 0 0 0 rgba(99,230,190,0);}
+  }
+
+  main{max-width:1180px;margin:0 auto;padding:0 24px 100px;}
+
+  /* ---------- Hero / Intake ---------- */
+  .hero{padding:56px 0 24px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;color:var(--violet);
+    letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:'';width:16px;height:1px;background:var(--violet);}
+  h1.hero-title{
+    font-size:clamp(28px,4vw,44px);
+    line-height:1.12;
+    margin:0 0 14px;
+    font-weight:700;
+    letter-spacing:-1px;
+    max-width:780px;
+  }
+  h1.hero-title .accent{color:var(--mint);}
+  .hero-desc{color:var(--muted);max-width:620px;font-size:15.5px;margin:0 0 40px;}
+
+  .intake-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px;
+  }
+  .intake-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;}
+  @media (max-width:860px){.intake-grid{grid-template-columns:1fr;}}
+
+  .field-group{margin-bottom:22px;}
+  .field-label{
+    font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.8px;margin-bottom:9px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .field-hint{color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;}
+
+  .btn-group{display:flex;flex-wrap:wrap;gap:8px;}
+  .opt-btn{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:9px 14px;
+    border-radius:8px;
+    font-size:13px;
+    transition:all .15s ease;
+  }
+  .opt-btn:hover{border-color:var(--violet-dim);color:var(--text);}
+  .opt-btn.active{
+    background:rgba(99,230,190,0.08);
+    border-color:var(--mint);
+    color:var(--mint);
+    font-weight:600;
+  }
+  .opt-btn.active[data-strict="Brutal"]{
+    background:rgba(255,107,129,0.08);border-color:var(--danger);color:var(--danger);
+  }
+  .opt-btn.active[data-strict="Rigorous"]{
+    background:rgba(255,180,84,0.08);border-color:var(--warn);color:var(--warn);
+  }
+
+  .select-input{
+    width:100%;background:var(--bg-elevated);border:1px solid var(--border);
+    color:var(--text);padding:11px 12px;border-radius:8px;font-size:13.5px;
+    appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238790A6'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;
+  }
+  .other-input{
+    margin-top:8px;width:100%;background:var(--bg-elevated);border:1px solid var(--border);
+    color:var(--text);padding:10px 12px;border-radius:8px;font-size:13.5px;
+  }
+  .textarea-input{
+    width:100%;min-height:220px;resize:vertical;
+    background:var(--bg-elevated);border:1px solid var(--border);
+    color:var(--text);padding:14px;border-radius:10px;font-size:13.5px;
+    font-family:var(--mono);line-height:1.6;
+  }
+  .textarea-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--dim);font-family:var(--mono);}
+
+  .dropzone{
+    border:1.5px dashed var(--border);border-radius:10px;
+    padding:22px;text-align:center;cursor:pointer;
+    background:var(--bg-elevated);transition:all .15s ease;
+  }
+  .dropzone:hover,.dropzone.dragover{border-color:var(--mint);background:rgba(99,230,190,0.04);}
+  .dropzone-icon{font-size:20px;margin-bottom:6px;}
+  .dropzone-text{font-size:13px;color:var(--muted);}
+  .dropzone-sub{font-size:11px;color:var(--dim);margin-top:4px;font-family:var(--mono);}
+  .image-preview{
+    margin-top:12px;display:flex;align-items:center;gap:12px;
+    background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px;
+  }
+  .image-preview img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
+  .image-preview .meta{flex:1;font-size:12.5px;color:var(--muted);overflow:hidden;}
+  .image-preview .meta strong{color:var(--text);display:block;font-size:13px;margin-bottom:2px;word-break:break-all;}
+  .image-preview .remove-btn{background:none;border:1px solid var(--border);color:var(--danger);border-radius:6px;padding:6px 10px;font-size:11px;}
+
+  .run-row{display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap;}
+  .run-btn{
+    background:var(--mint);color:#06120E;border:none;
+    padding:14px 26px;border-radius:10px;font-weight:700;font-size:14.5px;
+    display:flex;align-items:center;gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .run-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,230,190,0.18);}
+  .run-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+  .validation-msg{color:var(--danger);font-size:12.5px;font-family:var(--mono);}
+
+  /* ---------- Sections generic ---------- */
+  .section{margin-top:56px;}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px;}
+  .section-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;}
+  .section-title .tag{font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:10px;}
+
+  /* ---------- Pipeline strip ---------- */
+  .pipeline-strip{display:flex;align-items:center;overflow-x:auto;padding:6px 2px 18px;gap:0;}
+  .stage-chip{
+    display:flex;flex-direction:column;align-items:center;gap:8px;min-width:96px;
+    cursor:pointer;flex-shrink:0;
+  }
+  .stage-chip .ring{
+    width:38px;height:38px;border-radius:50%;border:2px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);
+    background:var(--bg-elevated);transition:all .2s ease;position:relative;
+  }
+  .stage-chip .lbl{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap;}
+  .stage-chip.status-running .ring{border-color:var(--warn);color:var(--warn);animation:spin-glow 1.4s linear infinite;}
+  .stage-chip.status-complete .ring{border-color:var(--mint);background:rgba(99,230,190,0.08);color:var(--mint);}
+  .stage-chip.status-error .ring{border-color:var(--danger);background:rgba(255,107,129,0.08);color:var(--danger);}
+  @keyframes spin-glow{
+    0%{box-shadow:0 0 0 0 rgba(255,180,84,0.4);}
+    70%{box-shadow:0 0 0 6px rgba(255,180,84,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,180,84,0);}
+  }
+  .connector{height:2px;flex:1;background:var(--border);min-width:20px;margin-top:-24px;}
+  .connector.done{background:var(--mint-dim);}
+
+  .log-terminal{
+    background:#080A0E;border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;height:210px;overflow-y:auto;
+    font-family:var(--mono);font-size:12px;line-height:1.7;
+  }
+  .log-line{white-space:pre-wrap;word-break:break-word;}
+  .log-time{color:var(--dim);margin-right:8px;}
+  .log-info{color:var(--muted);}
+  .log-success{color:var(--mint);}
+  .log-error{color:var(--danger);}
+  .log-warn{color:var(--warn);}
+
+  /* ---------- Dashboard ---------- */
+  .dashboard-grid{display:grid;grid-template-columns:260px 1fr;gap:20px;}
+  @media (max-width:860px){.dashboard-grid{grid-template-columns:1fr;}}
+  .score-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;
+    height:fit-content;
+  }
+  .score-ring-wrap{position:relative;width:150px;height:150px;margin-bottom:10px;}
+  .score-ring-wrap svg{transform:rotate(-90deg);}
+  .score-value{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+  }
+  .score-value .num{font-size:34px;font-weight:800;font-family:var(--mono);}
+  .score-value .lbl{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+  .score-card-title{font-weight:700;font-size:14px;margin-top:6px;}
+  .score-card-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .upload-preview-box{margin-top:20px;width:100%;text-align:left;}
+  .upload-preview-box h4{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 8px;}
+  .mini-text-preview{
+    background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;
+    padding:10px;font-family:var(--mono);font-size:10.5px;color:var(--muted);
+    max-height:90px;overflow:hidden;position:relative;margin-bottom:10px;
+  }
+  .mini-image-preview img{width:100%;border-radius:8px;border:1px solid var(--border);object-fit:cover;max-height:110px;}
+
+  .category-grid{display:flex;flex-direction:column;gap:14px;}
+  .category-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;
+    animation:card-in .4s ease;
+  }
+  @keyframes card-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .cat-header{display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .cat-badge{
+    font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--violet);
+    border:1px solid var(--violet-dim);background:rgba(180,140,255,0.07);
+    padding:4px 8px;border-radius:6px;flex-shrink:0;
+  }
+  .cat-name{font-weight:700;font-size:14.5px;flex:1;}
+  .cat-verdict{font-size:12.5px;color:var(--muted);flex:2;}
+  .cat-score{font-family:var(--mono);font-weight:700;font-size:15px;}
+  .cat-score.good{color:var(--mint);}
+  .cat-score.mid{color:var(--warn);}
+  .cat-score.bad{color:var(--danger);}
+  .cat-bar-track{height:5px;background:var(--bg-elevated);border-radius:4px;margin-top:12px;overflow:hidden;}
+  .cat-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .cat-body{margin-top:16px;display:none;}
+  .cat-body.open{display:block;}
+  .cat-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;}
+  @media (max-width:640px){.cat-cols{grid-template-columns:1fr;}}
+  .cat-list-title{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;}
+  .cat-list-title.strength{color:var(--mint);}
+  .cat-list-title.weakness{color:var(--danger);}
+  .list-item{font-size:13px;color:var(--text);margin-bottom:6px;padding-left:14px;position:relative;}
+  .list-item::before{content:'—';position:absolute;left:0;color:var(--dim);}
+  .cat-analysis{
+    font-size:13px;color:var(--muted);background:var(--bg-elevated);
+    border-left:2px solid var(--violet-dim);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:10px;
+  }
+  .cat-reco{margin-top:10px;}
+  .expand-hint{font-family:var(--mono);font-size:11px;color:var(--dim);flex-shrink:0;}
+  .stage-error-box{
+    margin-top:12px;background:rgba(255,107,129,0.06);border:1px solid var(--danger-dim);
+    border-radius:8px;padding:12px;font-size:12.5px;color:var(--danger);display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .retry-btn{background:none;border:1px solid var(--danger);color:var(--danger);padding:7px 12px;border-radius:7px;font-size:11.5px;flex-shrink:0;}
+  .retry-btn:hover{background:rgba(255,107,129,0.1);}
+  .skeleton{height:14px;background:linear-gradient(90deg,var(--bg-elevated) 25%,#1c2233 37%,var(--bg-elevated) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:4px;}
+  @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
+
+  /* ---------- Final report ---------- */
+  .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media (max-width:860px){.report-grid{grid-template-columns:1fr;}}
+  .report-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;}
+  .report-card.full{grid-column:1 / -1;}
+  .report-card h3{margin:0 0 14px;font-size:14.5px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.6px;color:var(--violet);display:flex;align-items:center;gap:8px;}
+  .exec-text{font-size:15px;color:var(--text);line-height:1.7;}
+  .health-row{margin-bottom:14px;}
+  .health-row:last-child{margin-bottom:0;}
+  .health-top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;}
+  .health-top span:last-child{font-family:var(--mono);color:var(--muted);}
+  .health-track{height:7px;background:var(--bg-elevated);border-radius:5px;overflow:hidden;}
+  .health-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--mint));transition:width 1.2s cubic-bezier(.2,.8,.2,1);}
+  .impact-item{
+    display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-soft);
+  }
+  .impact-item:last-child{border-bottom:none;}
+  .impact-num{font-family:var(--mono);color:var(--mint);font-weight:700;font-size:13px;flex-shrink:0;}
+  .perf-badge{
+    display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;
+    color:var(--warn);border:1px solid #6b5324;background:rgba(255,180,84,0.06);
+    padding:4px 9px;border-radius:20px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.6px;
+  }
+  .before-after{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){.before-after{grid-template-columns:1fr;}}
+  .ba-col{border-radius:10px;padding:14px;font-size:13px;line-height:1.6;font-family:var(--mono);}
+  .ba-before{background:rgba(255,107,129,0.05);border:1px solid var(--danger-dim);color:#e0a4ae;}
+  .ba-after{background:rgba(99,230,190,0.05);border:1px solid var(--mint-dim);color:#a9e9d4;}
+  .ba-label{font-family:var(--sans);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;display:block;}
+  .ba-before .ba-label{color:var(--danger);}
+  .ba-after .ba-label{color:var(--mint);}
+  .alt-list{list-style:none;padding:0;margin:0;}
+  .alt-list li{
+    background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;
+    padding:11px 14px;margin-bottom:8px;font-size:13.5px;
+  }
+  .checklist{list-style:none;padding:0;margin:0;}
+  .checklist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:13.5px;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist input{margin-top:3px;accent-color:var(--mint);width:15px;height:15px;flex-shrink:0;}
+  .checklist li.checked span{color:var(--dim);text-decoration:line-through;}
+  .deeper-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .chip{background:var(--bg-elevated);border:1px solid var(--border);color:var(--muted);padding:8px 13px;border-radius:20px;font-size:12.5px;}
+  .chip:hover{border-color:var(--violet);color:var(--violet);}
+  .chat-log{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;max-height:280px;overflow-y:auto;}
+  .chat-msg{padding:11px 14px;border-radius:10px;font-size:13.5px;line-height:1.6;max-width:88%;}
+  .chat-msg.user{align-self:flex-end;background:rgba(180,140,255,0.1);border:1px solid var(--violet-dim);}
+  .chat-msg.ai{align-self:flex-start;background:var(--bg-elevated);border:1px solid var(--border);}
+  .followup-row{display:flex;gap:10px;}
+  .followup-row input{
+    flex:1;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);
+    padding:11px 14px;border-radius:8px;font-size:13.5px;
+  }
+  .followup-row button{
+    background:var(--violet);color:#180E2E;border:none;padding:0 18px;border-radius:8px;font-weight:700;font-size:13px;
+  }
+  .followup-row button:disabled{opacity:0.5;}
+  .disclaimer{font-size:11px;color:var(--dim);margin-top:10px;font-style:italic;}
+
+  .reset-row{display:flex;justify-content:center;margin-top:60px;}
+  .reset-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:12px 22px;border-radius:9px;font-size:13px;}
+  .reset-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  footer{text-align:center;padding:40px 24px;color:var(--dim);font-size:12px;font-family:var(--mono);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">&lt;CIS/&gt;</span>
+    <span class="brand-name">Content Intelligence Studio</span>
+    <span class="brand-sub">v1.0</span>
+  </div>
+  <div class="status-pill" id="statusPill"><span class="pulse"></span><span id="statusPillText">idle</span></div>
+</header>
+
+<main>
+
+  <!-- ===================== HERO / INTAKE ===================== -->
+  <section class="hero">
+    <div class="eyebrow">AI content review pipeline</div>
+    <h1 class="hero-title">Ship writing that <span class="accent">passes review</span> before it goes live.</h1>
+    <p class="hero-desc">Configure your content below. Content Intelligence Studio builds a custom reviewer pipeline for it, runs each reviewer through live Claude API calls, and returns a full editorial report — scores, rewrites, and all.</p>
+
+    <div class="intake-card">
+      <div class="intake-grid">
+        <div>
+          <div class="field-group">
+            <div class="field-label">Content type</div>
+            <div class="btn-group" id="ctButtons" data-key="contentType"></div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Platform</div>
+            <select class="select-input" id="platformSelect"></select>
+            <input type="text" class="other-input hidden" id="platformOther" placeholder="Tell us the platform...">
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Primary goal</div>
+            <div class="btn-group" id="goalButtons" data-key="goal"></div>
+            <input type="text" class="other-input hidden" id="goalOther" placeholder="Tell us your goal...">
+          </div>
+
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label">Review strictness <span class="field-hint" id="strictHint">Unsparing, no cushioning</span></div>
+            <div class="btn-group" id="strictButtons" data-key="strictness"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-group" id="textFieldGroup">
+            <div class="field-label"><span id="textFieldLabel">Article text</span><span class="field-hint">Paste the full content</span></div>
+            <textarea class="textarea-input" id="articleText" placeholder="Paste your article, script, or caption here..."></textarea>
+            <div class="textarea-meta"><span id="charCount">0 characters</span><span>min 40 chars</span></div>
+          </div>
+
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label"><span id="imageFieldLabel">Cover image / thumbnail</span><span class="field-hint">optional</span></div>
+            <div class="dropzone" id="dropzone">
+              <div class="dropzone-icon">&#8593;</div>
+              <div class="dropzone-text">Click to upload, or drag an image here</div>
+              <div class="dropzone-sub">PNG / JPG / WEBP, up to 5MB</div>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" class="hidden">
+            <div class="image-preview hidden" id="imagePreviewBox">
+              <img id="imagePreviewImg" src="" alt="Uploaded preview">
+              <div class="meta"><strong id="imgFileName"></strong><span id="imgFileMeta"></span></div>
+              <button class="remove-btn" id="removeImageBtn">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="run-row">
+        <button class="run-btn" id="runBtn"><span>&#9654;</span> Run review pipeline</button>
+        <span class="validation-msg hidden" id="validationMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PIPELINE ===================== -->
+  <section class="section hidden" id="pipelineSection">
+    <div class="section-head">
+      <div class="section-title">Review pipeline <span class="tag">live execution</span></div>
+    </div>
+    <div class="pipeline-strip" id="pipelineStrip"></div>
+    <div class="log-terminal" id="logTerminal"></div>
+  </section>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section class="section hidden" id="dashboardSection">
+    <div class="section-head">
+      <div class="section-title">Content dashboard <span class="tag">reviewer-by-reviewer</span></div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="score-card">
+        <div class="score-ring-wrap">
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <circle cx="75" cy="75" r="66" fill="none" stroke="#1A2032" stroke-width="10"/>
+            <circle id="scoreRingFill" cx="75" cy="75" r="66" fill="none" stroke="#63E6BE" stroke-width="10" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"/>
+          </svg>
+          <div class="score-value"><span class="num" id="scoreNum">—</span><span class="lbl">Overall score</span></div>
+        </div>
+        <div class="score-card-title" id="scoreTitle">Awaiting synthesis...</div>
+        <div class="score-card-sub" id="scoreSub">Complete all reviewers to unlock</div>
+
+        <div class="upload-preview-box">
+          <h4>Submitted text</h4>
+          <div class="mini-text-preview" id="miniTextPreview">—</div>
+          <div class="mini-image-preview hidden" id="miniImagePreview"></div>
+        </div>
+      </div>
+
+      <div class="category-grid" id="categoryGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL REPORT ===================== -->
+  <section class="section hidden" id="reportSection">
+    <div class="section-head">
+      <div class="section-title">Final report <span class="tag">editor-in-chief synthesis</span></div>
+    </div>
+    <div class="report-grid">
+      <div class="report-card full">
+        <h3>Executive summary</h3>
+        <p class="exec-text" id="execSummary">—</p>
+      </div>
+
+      <div class="report-card">
+        <h3>Content health report</h3>
+        <div class="health-bars" id="healthBars"></div>
+      </div>
+
+      <div class="report-card">
+        <h3>Highest-impact improvements</h3>
+        <div id="impactList"></div>
+      </div>
+
+      <div class="report-card full">
+        <h3>Predicted performance potential</h3>
+        <span class="perf-badge">&#9889; AI estimate — not a guarantee</span>
+        <p class="exec-text" id="perfEstimate">—</p>
+      </div>
+
+      <div class="report-card full">
+        <h3>Before vs. after</h3>
+        <div class="before-after">
+          <div class="ba-col ba-before"><span class="ba-label">Before</span><span id="baBefore">—</span></div>
+          <div class="ba-col ba-after"><span class="ba-label">After (Claude rewrite)</span><span id="baAfter">—</span></div>
+        </div>
+      </div>
+
+      <div class="report-card">
+        <h3>Alternative titles</h3>
+        <ul class="alt-list" id="titleAltList"></ul>
+      </div>
+
+      <div class="report-card">
+        <h3>Alternative hooks</h3>
+        <ul class="alt-list" id="hookAltList"></ul>
+      </div>
+
+      <div class="report-card full">
+        <h3>Publishing checklist</h3>
+        <ul class="checklist" id="checklist"></ul>
+      </div>
+
+      <div class="report-card full">
+        <h3>Go deeper</h3>
+        <div class="deeper-chips" id="deeperChips"></div>
+        <div class="chat-log" id="chatLog"></div>
+        <div class="followup-row">
+          <input type="text" id="followupInput" placeholder="Ask the Editor-in-Chief a follow-up question...">
+          <button id="followupSend">Ask</button>
+        </div>
+        <p class="disclaimer">Every answer above is generated live by Claude for this specific piece of content — nothing here is templated or precomputed.</p>
+      </div>
+    </div>
+
+    <div class="reset-row"><button class="reset-btn" id="resetBtn">&#8635; Start a new review</button></div>
+  </section>
+
+</main>
+
+<footer>Content Intelligence Studio — analysis generated live via the Claude API. Scores and predictions are AI estimates, not guarantees.</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============================================================
+     CONFIG & REVIEWER CATALOG
+  ============================================================ */
+  var MODEL = 'claude-sonnet-4-6';
+  var API_URL = 'https://api.anthropic.com/v1/messages';
+
+  var CONTENT_TYPES = [
+    {value:'blog', label:'Blog article / long-form text'},
+    {value:'social', label:'Social media post/caption'},
+    {value:'video', label:'Video script/transcript'},
+    {value:'image', label:'Thumbnail or image/screenshot'}
+  ];
+
+  var PLATFORM_OPTIONS = {
+    blog: ['Dev.to / Hashnode (technical audience)','Medium / Substack (newsletter-style)','Personal/company blog (SEO-focused)','LinkedIn article','Other'],
+    social: ['Instagram','X / Twitter','LinkedIn','TikTok caption','Facebook','Other'],
+    video: ['YouTube','TikTok','Instagram Reels','LinkedIn video','Other'],
+    image: ['YouTube thumbnail','Instagram post/cover','Blog cover image','Ad creative','Other']
+  };
+
+  var GOAL_OPTIONS = [
+    'Maximize reach/views (SEO & discoverability)',
+    'Build authority/personal brand',
+    'Drive traffic to product/portfolio',
+    'Educate & help the community',
+    'Other'
+  ];
+
+  var STRICTNESS = {
+    'Light touch': 'Be encouraging and gentle. Lead with what genuinely works, soften critiques with kindness, but remain honest — never invent praise that is not warranted.',
+    'Balanced': 'Be fair and even-handed. Balance genuine, specific praise with honest, constructive critique. Do not exaggerate in either direction.',
+    'Rigorous': 'Be strict and detailed. Hold the work to professional publication standards. Do not inflate scores or soften real problems.',
+    'Brutal': 'Be unsparing and direct, like a top-tier technical editor with no time for flattery. If something is mediocre, derivative, unclear, or wrong, say exactly that and why, in plain language. Do not hedge, do not cushion, do not open with false praise. The writer explicitly wants maximum-value, zero-comfort feedback.'
+  };
+  var STRICT_HINTS = {
+    'Light touch':'Encouraging, gentle suggestions',
+    'Balanced':'Honest mix of praise and critique',
+    'Rigorous':'Strict, held to pro publication standards',
+    'Brutal':'Unsparing, no cushioning'
+  };
+
+  var CATEGORY_FORMAT =
+"Respond in plain text only. No markdown, no JSON, no asterisks, no headers, no code fences, no numbered lists. Output exactly these lines, in this exact order, each starting with the exact uppercase label shown followed by a colon and a single space. Do not add any label not listed here, and do not add any text before the first label or after the last line.\n" +
+"SCORE: a single integer from 0 to 100, nothing else on the line\n" +
+"VERDICT: one blunt sentence, under 12 words\n" +
+"STRENGTH: one genuine, specific strength, under 20 words\n" +
+"STRENGTH: a second genuine, specific strength, under 20 words\n" +
+"WEAKNESS: one real, specific weakness, under 20 words\n" +
+"WEAKNESS: a second real, specific weakness, under 20 words\n" +
+"OPPORTUNITY: one concrete missed opportunity, under 20 words\n" +
+"RECOMMENDATION: one specific, actionable fix, under 20 words\n" +
+"RECOMMENDATION: a second specific, actionable fix, under 20 words\n" +
+"ANALYSIS: two to three sentences of reasoning behind the score, under 60 words total\n" +
+"Keep the entire response under 200 words. Base every line on the actual content provided — never write generic filler.";
+
+  var SYNTHESIS_FORMAT =
+"Respond in plain text only. No markdown, no JSON, no asterisks, no headers, no code fences. Output exactly these lines, in this exact order, each starting with the exact uppercase label shown followed by a colon and a single space. Repeat a label on a new line exactly as many times as specified. Do not add labels not listed, and do not add commentary before the first label or after the last line.\n" +
+"OVERALL_SCORE: a single integer from 0 to 100\n" +
+"EXEC_SUMMARY: a tight executive summary of the content's overall quality and readiness, under 55 words\n" +
+"HEALTH_STRUCTURE: integer 0-100 rating structure and organization\n" +
+"HEALTH_TECHNICAL: integer 0-100 rating technical/factual soundness or credibility\n" +
+"HEALTH_ENGAGEMENT: integer 0-100 rating how engaging/compelling it is to read\n" +
+"HEALTH_DISCOVERABILITY: integer 0-100 rating platform fit and discoverability\n" +
+"IMPACT: the single highest-impact improvement to make first, under 20 words\n" +
+"IMPACT: the second highest-impact improvement, under 20 words\n" +
+"IMPACT: the third highest-impact improvement, under 20 words\n" +
+"PERFORMANCE_ESTIMATE: a performance prediction framed explicitly as an AI estimate (use the words \"estimated\" or \"likely\"), under 40 words\n" +
+"BEFORE_SNIPPET: a short verbatim excerpt of the actual current opening, under 25 words\n" +
+"AFTER_SNIPPET: your rewritten, improved version of that same opening, under 35 words\n" +
+"TITLE_ALT: an alternative title option 1\n" +
+"TITLE_ALT: an alternative title option 2\n" +
+"TITLE_ALT: an alternative title option 3\n" +
+"HOOK_ALT: an alternative opening hook/line option 1\n" +
+"HOOK_ALT: an alternative opening hook/line option 2\n" +
+"CHECKLIST: a publishing checklist item, under 14 words\n" +
+"CHECKLIST: a publishing checklist item, under 14 words\n" +
+"CHECKLIST: a publishing checklist item, under 14 words\n" +
+"CHECKLIST: a publishing checklist item, under 14 words\n" +
+"CHECKLIST: a publishing checklist item, under 14 words\n" +
+"DEEPER_PROMPT: a good follow-up question the creator could ask for deeper optimization, under 16 words\n" +
+"DEEPER_PROMPT: a second follow-up question, under 16 words\n" +
+"DEEPER_PROMPT: a third follow-up question, under 16 words\n" +
+"Keep the entire response under 320 words total. Every line must be grounded in the actual content and the actual prior reviewer findings supplied below — never write generic filler.";
+
+  var REVIEWER_DEFS = {
+    structure: {tag:'STRUCT', name:'Structure & Clarity Editor',
+      persona:"You evaluate how the writing is organized: flow between sections, pacing, use of headers, paragraph length, and overall readability from first line to last.",
+      focus:"structure, flow, pacing, and readability of the piece from first line to last."},
+    technical: {tag:'TECH', name:'Technical Accuracy & Depth Reviewer',
+      persona:"You are a senior engineer who checks technical claims for accuracy, evaluates depth of explanation, flags oversimplification or errors, and judges whether any code or examples are sound.",
+      focus:"technical correctness, depth, precision of terminology, and whether claims are adequately supported or explained."},
+    platform: {tag:'PLAT', name:'Platform Fit & Discoverability Strategist',
+      persona:"You specialize in how content performs on the specific named platform, including formatting conventions, tagging, SEO, and what that platform's audience expects and rewards.",
+      focus:"fit for the named platform: formatting conventions, likely tags or keywords, SEO/discoverability, and audience expectations."},
+    hook: {tag:'HOOK', name:'Hook, Title & Metadata Strategist',
+      persona:"You specialize in titles, opening hooks, and metadata that determine whether a reader clicks and keeps reading in the first five seconds.",
+      focus:"the title, opening hook, and first few lines — whether they earn the click and the next sentence."},
+    visual: {tag:'VISUAL', name:'Cover Image & Visual Asset Reviewer',
+      persona:"You are a visual design and thumbnail specialist. Look directly at the provided image and evaluate its composition, legibility, contrast, emotional pull, and fit with the written content and platform.",
+      focus:"the uploaded image itself: composition, legibility, contrast, curiosity/appeal, and alignment with the article and platform.", needsImage:true},
+    caption: {tag:'CAPTION', name:'Caption & CTA Reviewer',
+      persona:"You evaluate short-form social captions for scroll-stopping power, clarity, and call-to-action strength.",
+      focus:"caption hook strength, clarity, tone, and call-to-action effectiveness."},
+    algorithm: {tag:'ALGO', name:'Platform Algorithm Fit Reviewer',
+      persona:"You understand how the named platform's ranking or recommendation system rewards or penalizes content, including hashtags, format, and posting patterns implied by the text.",
+      focus:"likely algorithmic performance on the named platform: format fit, hashtag/keyword use, and shareability signals."},
+    retention: {tag:'RETAIN', name:'Retention & Pacing Reviewer',
+      persona:"You evaluate video or script pacing for viewer retention: opening hook strength, pattern interrupts, pacing of information, and points of likely drop-off.",
+      focus:"retention risk: the opening seconds, pacing, and points where a viewer is likely to drop off."},
+    composition: {tag:'COMP', name:'Visual Composition Reviewer',
+      persona:"You are a visual designer evaluating a standalone image asset for composition, hierarchy, contrast, and text legibility.",
+      focus:"composition, visual hierarchy, contrast, and text legibility within the image itself.", needsImage:true},
+    clickthrough: {tag:'CTR', name:'Click-Through & Curiosity Reviewer',
+      persona:"You evaluate whether an image creates enough curiosity or clarity to earn a click in a crowded feed.",
+      focus:"click-through appeal: curiosity gap, emotional pull, and clarity of promise at thumbnail size.", needsImage:true},
+    synthesis: {tag:'LEAD', name:'Editor-in-Chief',
+      persona:"You are the Editor-in-Chief who has read the original content plus every specialist reviewer's findings. Your job is to synthesize everything into one decisive, unified final verdict.",
+      focus:null, isSynthesis:true}
+  };
+
+  function buildPipeline(inputs){
+    var stages = [];
+    if(inputs.contentType==='blog'){ stages.push('structure','technical','platform'); }
+    else if(inputs.contentType==='social'){ stages.push('caption','algorithm','structure'); }
+    else if(inputs.contentType==='video'){ stages.push('retention','structure','platform'); }
+    else { stages.push('composition','clickthrough','platform'); }
+    if(inputs.contentType!=='image'){ stages.push('hook'); }
+    if(inputs.hasImage && inputs.contentType!=='image'){ stages.push('visual'); }
+    stages.push('synthesis');
+    var seen = {};
+    var out = [];
+    for(var i=0;i<stages.length;i++){
+      var id = stages[i];
+      if(seen[id]) continue;
+      seen[id]=true;
+      var def = REVIEWER_DEFS[id];
+      out.push({
+        id:id, tag:def.tag, name:def.name, persona:def.persona, focus:def.focus,
+        needsImage: !!def.needsImage, isSynthesis: !!def.isSynthesis,
+        status:'pending', parsed:null, raw:null, error:null
+      });
+    }
+    return out;
+  }
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  var state = {
+    contentType:'blog',
+    platform:'Dev.to / Hashnode (technical audience)',
+    goal:'Educate & help the community',
+    strictness:'Brutal',
+    articleText:'',
+    image:null, // {base64, mediaType, name, size, dataUrl}
+    stages:[],
+    running:false
+  };
+
+  /* ============================================================
+     DOM HELPERS
+  ============================================================ */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function fmtTime(){
+    var d = new Date();
+    function p(n){ return (n<10?'0':'')+n; }
+    return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+
+  /* ============================================================
+     INTAKE FORM RENDERING
+  ============================================================ */
+  function renderButtonGroup(containerEl, values, selected, onSelect, attr){
+    containerEl.innerHTML = '';
+    values.forEach(function(v){
+      var label = typeof v === 'object' ? v.label : v;
+      var val = typeof v === 'object' ? v.value : v;
+      var btn = document.createElement('button');
+      btn.type='button';
+      btn.className = 'opt-btn' + (val===selected ? ' active' : '');
+      if(attr) btn.setAttribute(attr, val);
+      btn.textContent = label;
+      btn.addEventListener('click', function(){
+        onSelect(val);
+      });
+      containerEl.appendChild(btn);
+    });
+  }
+
+  function renderIntake(){
+    renderButtonGroup($('ctButtons'), CONTENT_TYPES, state.contentType, function(val){
+      state.contentType = val;
+      updatePlatformOptions();
+      updateFieldLabels();
+      renderIntake();
+    });
+
+    renderButtonGroup($('goalButtons'), GOAL_OPTIONS, isKnownGoal() ? state.goal : 'Other', function(val){
+      state.goal = val;
+      $('goalOther').classList.toggle('hidden', val!=='Other');
+      if(val==='Other'){ $('goalOther').focus(); }
+      renderIntake();
+    });
+
+    renderButtonGroup($('strictButtons'), Object.keys(STRICTNESS), state.strictness, function(val){
+      state.strictness = val;
+      $('strictHint').textContent = STRICT_HINTS[val];
+      renderIntake();
+    }, 'data-strict');
+    $('strictHint').textContent = STRICT_HINTS[state.strictness];
+
+    updatePlatformOptions();
+  }
+
+  function isKnownGoal(){
+    return GOAL_OPTIONS.indexOf(state.goal) !== -1 && state.goal !== 'Other';
+  }
+
+  function updatePlatformOptions(){
+    var opts = PLATFORM_OPTIONS[state.contentType] || PLATFORM_OPTIONS.blog;
+    var sel = $('platformSelect');
+    var current = state.platform;
+    sel.innerHTML = '';
+    var matched = false;
+    opts.forEach(function(o){
+      var el = document.createElement('option');
+      el.value = o; el.textContent = o;
+      if(o===current){ matched = true; }
+      sel.appendChild(el);
+    });
+    if(matched){
+      sel.value = current;
+      $('platformOther').classList.add('hidden');
+    } else {
+      sel.value = 'Other';
+      $('platformOther').classList.remove('hidden');
+      $('platformOther').value = current;
+    }
+  }
+
+  function updateFieldLabels(){
+    var isImageType = state.contentType==='image';
+    $('textFieldLabel').textContent = isImageType ? 'Context / caption text (optional)' : (
+      state.contentType==='social' ? 'Caption text' : state.contentType==='video' ? 'Script / transcript' : 'Article text'
+    );
+    $('imageFieldLabel').textContent = isImageType ? 'Upload the image (required)' : 'Cover image / thumbnail';
+    $('articleText').placeholder = isImageType ?
+      'Optional: any caption, title, or context for the image...' :
+      'Paste your ' + (state.contentType==='social'?'caption':state.contentType==='video'?'script/transcript':'article') + ' here...';
+  }
+
+  $('platformSelect').addEventListener('change', function(){
+    state.platform = this.value;
+    $('platformOther').classList.toggle('hidden', this.value!=='Other');
+    if(this.value==='Other'){ $('platformOther').focus(); }
+  });
+  $('platformOther').addEventListener('input', function(){ state.platform = this.value; });
+  $('goalOther').addEventListener('input', function(){ state.goal = this.value; });
+
+  $('articleText').addEventListener('input', function(){
+    state.articleText = this.value;
+    $('charCount').textContent = this.value.length + ' characters';
+  });
+
+  /* ---- image upload ---- */
+  var dropzone = $('dropzone'), imageInput = $('imageInput');
+  dropzone.addEventListener('click', function(){ imageInput.click(); });
+  dropzone.addEventListener('dragover', function(e){ e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', function(){ dropzone.classList.remove('dragover'); });
+  dropzone.addEventListener('drop', function(e){
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+  });
+  imageInput.addEventListener('change', function(){
+    if(this.files && this.files[0]) handleImageFile(this.files[0]);
+  });
+  $('removeImageBtn').addEventListener('click', function(){
+    state.image = null;
+    $('imagePreviewBox').classList.add('hidden');
+    dropzone.classList.remove('hidden');
+    imageInput.value = '';
+  });
+
+  function handleImageFile(file){
+    clearValidation();
+    if(!/^image\//.test(file.type)){
+      showValidation('That file is not an image. Please upload a PNG, JPG, or WEBP.');
+      return;
+    }
+    if(file.size > 5.5*1024*1024){
+      showValidation('Image is larger than 5MB. Please upload a smaller file.');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var dataUrl = e.target.result;
+      var base64 = dataUrl.split(',')[1];
+      state.image = {base64:base64, mediaType:file.type, name:file.name, size:file.size, dataUrl:dataUrl};
+      $('imagePreviewImg').src = dataUrl;
+      $('imgFileName').textContent = file.name;
+      $('imgFileMeta').textContent = (file.size/1024).toFixed(0) + ' KB · ' + file.type;
+      $('imagePreviewBox').classList.remove('hidden');
+      dropzone.classList.add('hidden');
+    };
+    reader.onerror = function(){ showValidation('Could not read that image file. Please try another.'); };
+    reader.readAsDataURL(file);
+  }
+
+  function showValidation(msg){
+    var el = $('validationMsg');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function clearValidation(){ $('validationMsg').classList.add('hidden'); }
+
+  /* ============================================================
+     VALIDATION + LAUNCH
+  ============================================================ */
+  $('runBtn').addEventListener('click', function(){
+    if(state.running) return;
+    clearValidation();
+    if(state.contentType==='image'){
+      if(!state.image){ showValidation('Please upload an image — it is the content being reviewed.'); return; }
+    } else {
+      if(!state.articleText || state.articleText.trim().length < 40){
+        showValidation('Please paste at least 40 characters of content to review.');
+        return;
+      }
+    }
+    if(state.goal==='Other' && !$('goalOther').value.trim()){
+      showValidation('Please describe your goal in the "Other" field.'); return;
+    }
+    if(state.platform==='Other' && !$('platformOther').value.trim()){
+      showValidation('Please tell us the platform in the "Other" field.'); return;
+    }
+    startReview();
+  });
+
+  $('resetBtn').addEventListener('click', function(){
+    location.reload();
+  });
+
+  /* ============================================================
+     PIPELINE ORCHESTRATION
+  ============================================================ */
+  function setPill(text, live){
+    $('statusPillText').textContent = text;
+    $('statusPill').classList.toggle('live', !!live);
+  }
+
+  function log(level, text){
+    var term = $('logTerminal');
+    var line = document.createElement('div');
+    line.className = 'log-line';
+    var cls = 'log-'+level;
+    line.innerHTML = '<span class="log-time">['+fmtTime()+']</span><span class="'+cls+'">'+esc(text)+'</span>';
+    term.appendChild(line);
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function contentTypeLabel(){
+    var m = CONTENT_TYPES.filter(function(c){ return c.value===state.contentType; });
+    return m.length ? m[0].label : state.contentType;
+  }
+
+  async function startReview(){
+    state.running = true;
+    $('runBtn').disabled = true;
+    $('runBtn').innerHTML = '<span>&#8987;</span> Running...';
+    setPill('pipeline running', true);
+
+    state.stages = buildPipeline(state);
+
+    $('pipelineSection').classList.remove('hidden');
+    $('dashboardSection').classList.remove('hidden');
+    $('logTerminal').innerHTML = '';
+    $('categoryGrid').innerHTML = '';
+    renderPipelineStrip();
+    renderUploadPreview();
+
+    log('info', 'Pipeline initialized — ' + state.stages.length + ' reviewer' + (state.stages.length===1?'':'s') + ' queued for a ' + contentTypeLabel().toLowerCase() + '.');
+    $('pipelineSection').scrollIntoView({behavior:'smooth', block:'start'});
+
+    for(var i=0;i<state.stages.length;i++){
+      var stage = state.stages[i];
+      await runStage(stage);
+    }
+
+    var synth = state.stages.filter(function(s){ return s.isSynthesis; })[0];
+    if(synth && synth.status==='complete'){
+      renderFinalReport(synth);
+      $('reportSection').classList.remove('hidden');
+      log('success', 'Editor-in-Chief synthesis complete. Final report ready.');
+      setPill('review complete', true);
+    } else {
+      log('error', 'Synthesis stage did not complete. You can retry it from the pipeline above.');
+      setPill('needs attention', false);
+    }
+
+    state.running = false;
+    $('runBtn').disabled = false;
+    $('runBtn').innerHTML = '<span>&#9654;</span> Run review pipeline';
+  }
+
+  function getPriorContext(){
+    var parts = [];
+    state.stages.forEach(function(s){
+      if(!s.isSynthesis && s.status==='complete' && s.parsed){
+        var p = s.parsed;
+        parts.push(
+          '['+s.tag+'] '+s.name+' — score '+(field(p,'SCORE')||'N/A')+'. Verdict: '+(field(p,'VERDICT')||'—')+
+          '. Weaknesses: '+(list(p,'WEAKNESS').join('; ')||'none noted')+
+          '. Recommendations: '+(list(p,'RECOMMENDATION').join('; ')||'none noted')
+        );
+      }
+    });
+    return parts.join('\n');
+  }
+
+  async function runStage(stage){
+    stage.status = 'running';
+    stage.error = null;
+    renderPipelineStrip();
+    renderCategoryGrid();
+    log('info', 'Running ' + stage.name + '...');
+
+    var systemPrompt = buildSystemPrompt(stage);
+    var priorContext = stage.isSynthesis ? getPriorContext() : null;
+    var contentBlocks = buildContentBlocks(stage, priorContext);
+
+    try{
+      var raw = await callClaudeWithRetry(systemPrompt, contentBlocks, 2, function(attempt, err){
+        log('warn', stage.name + ' — attempt ' + attempt + ' failed (' + err.message + '), retrying...');
+      });
+      stage.raw = raw;
+      stage.parsed = parseFields(raw);
+      stage.status = 'complete';
+      var scoreField = stage.isSynthesis ? 'OVERALL_SCORE' : 'SCORE';
+      var sc = field(stage.parsed, scoreField);
+      log('success', stage.name + ' complete' + (sc? ' — score ' + sc : '') + '.');
+    } catch(err){
+      stage.status = 'error';
+      stage.error = err.message || 'Unknown error.';
+      log('error', stage.name + ' failed: ' + stage.error);
+    }
+
+    renderPipelineStrip();
+    renderCategoryGrid();
+  }
+
+  function retryStage(stageId){
+    var stage = state.stages.filter(function(s){ return s.id===stageId; })[0];
+    if(!stage) return;
+    runStage(stage).then(function(){
+      if(stage.isSynthesis && stage.status==='complete'){
+        renderFinalReport(stage);
+        $('reportSection').classList.remove('hidden');
+      }
+    });
+  }
+
+  /* ============================================================
+     PROMPT BUILDING
+  ============================================================ */
+  function buildSystemPrompt(stage){
+    var rules = stage.isSynthesis ? SYNTHESIS_FORMAT : CATEGORY_FORMAT;
+    var lines = [];
+    lines.push('You are ' + stage.name + ', a specialist reviewer inside a professional content review pipeline called Content Intelligence Studio.');
+    lines.push(stage.persona);
+    lines.push('Review strictness setting: "' + state.strictness + '" — ' + STRICTNESS[state.strictness]);
+    lines.push('The content under review is a ' + contentTypeLabel().toLowerCase() + ' intended for ' + state.platform + '. The creator\'s stated goal is: ' + state.goal + '.');
+    lines.push(rules);
+    return lines.join('\n\n');
+  }
+
+  function buildContentBlocks(stage, priorContext){
+    var blocks = [];
+    var includeImage = state.image && (state.contentType==='image' || stage.needsImage);
+    if(includeImage){
+      blocks.push({type:'image', source:{type:'base64', media_type: state.image.mediaType, data: state.image.base64}});
+    }
+    var text = '';
+    text += 'CONTENT TYPE: ' + contentTypeLabel() + '\n';
+    text += 'PLATFORM: ' + state.platform + '\n';
+    text += "CREATOR'S STATED GOAL: " + state.goal + '\n\n';
+
+    if(state.articleText && state.articleText.trim()){
+      text += 'CONTENT TEXT:\n"""\n' + state.articleText.trim().slice(0,7000) + '\n"""\n\n';
+    } else if(state.contentType==='image'){
+      text += 'No accompanying text was provided. Analyze the image itself as the primary content.\n\n';
+    }
+
+    if(stage.isSynthesis){
+      text += 'PRIOR SPECIALIST REVIEWER FINDINGS:\n' + (priorContext || 'No prior findings available.') + '\n\n';
+      text += 'Using the content above and the prior reviewer findings, produce the final Editor-in-Chief synthesis now, following the required format exactly.';
+    } else {
+      text += 'Focus specifically on: ' + stage.focus + '\n\nProvide your review now, following the required format exactly.';
+    }
+    blocks.push({type:'text', text:text});
+    return blocks;
+  }
+
+  /* ============================================================
+     API CALLS
+  ============================================================ */
+  function callClaude(systemPrompt, userContentBlocks){
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 60000);
+    return fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{role:'user', content:userContentBlocks}]
+      })
+    }).then(function(res){
+      clearTimeout(timeoutId);
+      if(!res.ok){
+        return res.json().catch(function(){ return null; }).then(function(errJson){
+          var msg = 'Request failed with status ' + res.status;
+          if(errJson && errJson.error && errJson.error.message) msg = errJson.error.message;
+          throw new Error(msg);
+        });
+      }
+      return res.json();
+    }).then(function(data){
+      var blocks = data && data.content ? data.content : [];
+      var textBlock = null;
+      for(var i=0;i<blocks.length;i++){
+        if(blocks[i].type==='text' && blocks[i].text){ textBlock = blocks[i]; break; }
+      }
+      if(!textBlock) throw new Error('Empty response from model.');
+      return textBlock.text;
+    }).catch(function(err){
+      clearTimeout(timeoutId);
+      if(err && err.name==='AbortError') throw new Error('Request timed out.');
+      throw err;
+    });
+  }
+
+  function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+  async function callClaudeWithRetry(systemPrompt, userContentBlocks, maxRetries, onRetry){
+    var lastErr;
+    for(var attempt=0; attempt<=maxRetries; attempt++){
+      try{
+        return await callClaude(systemPrompt, userContentBlocks);
+      } catch(err){
+        lastErr = err;
+        if(attempt < maxRetries){
+          if(onRetry) onRetry(attempt+1, err);
+          await delay(800*(attempt+1));
+        }
+      }
+    }
+    throw lastErr;
+  }
+
+  /* ============================================================
+     PARSING
+  ============================================================ */
+  function parseFields(raw){
+    var lines = String(raw||'').split('\n');
+    var result = {};
+    for(var i=0;i<lines.length;i++){
+      var line = lines[i].trim();
+      if(!line) continue;
+      var m = line.match(/^([A-Z_]+):\s*(.*)$/);
+      if(!m) continue;
+      var key = m[1], val = m[2].trim();
+      if(!val) continue;
+      if(!result[key]) result[key] = [];
+      result[key].push(val);
+    }
+    return result;
+  }
+  function field(parsed, key){
+    return parsed && parsed[key] && parsed[key][0] ? parsed[key][0] : null;
+  }
+  function list(parsed, key){
+    return parsed && parsed[key] ? parsed[key] : [];
+  }
+
+  /* ============================================================
+     RENDERING — PIPELINE STRIP + LOG
+  ============================================================ */
+  function statusRingContent(status){
+    if(status==='complete') return '&#10003;';
+    if(status==='error') return '&#10005;';
+    if(status==='running') return '&#8230;';
+    return '';
+  }
+
+  function renderPipelineStrip(){
+    var strip = $('pipelineStrip');
+    strip.innerHTML = '';
+    state.stages.forEach(function(stage, idx){
+      if(idx>0){
+        var connector = document.createElement('div');
+        connector.className = 'connector' + (state.stages[idx-1].status==='complete' ? ' done' : '');
+        strip.appendChild(connector);
+      }
+      var chip = document.createElement('div');
+      chip.className = 'stage-chip status-' + stage.status;
+      chip.innerHTML = '<div class="ring">' + (stage.status==='pending' ? esc(stage.tag.slice(0,3)) : statusRingContent(stage.status)) + '</div><div class="lbl">' + esc(stage.tag) + '</div>';
+      chip.addEventListener('click', function(){
+        var card = document.getElementById('card-'+stage.id);
+        if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); }
+      });
+      strip.appendChild(chip);
+    });
+  }
+
+  /* ============================================================
+     RENDERING — CATEGORY CARDS
+  ============================================================ */
+  function scoreClass(n){
+    n = parseInt(n,10);
+    if(isNaN(n)) return 'mid';
+    if(n>=75) return 'good';
+    if(n>=50) return 'mid';
+    return 'bad';
+  }
+  function scoreColor(n){
+    var c = scoreClass(n);
+    return c==='good' ? '#63E6BE' : c==='bad' ? '#FF6B81' : '#FFB454';
+  }
+
+  function renderCategoryGrid(){
+    var grid = $('categoryGrid');
+    grid.innerHTML = '';
+    state.stages.forEach(function(stage){
+      if(stage.isSynthesis) return;
+      var card = document.createElement('div');
+      card.className = 'category-card';
+      card.id = 'card-'+stage.id;
+
+      if(stage.status==='pending'){
+        card.innerHTML = '<div class="cat-header"><span class="cat-badge">'+esc(stage.tag)+'</span><span class="cat-name">'+esc(stage.name)+'</span><span class="cat-verdict" style="color:var(--dim)">Queued</span></div>';
+      } else if(stage.status==='running'){
+        card.innerHTML =
+          '<div class="cat-header"><span class="cat-badge">'+esc(stage.tag)+'</span><span class="cat-name">'+esc(stage.name)+'</span></div>' +
+          '<div class="skeleton" style="width:60%;margin-top:14px;"></div>' +
+          '<div class="skeleton" style="width:85%;margin-top:8px;"></div>' +
+          '<div class="skeleton" style="width:40%;margin-top:8px;"></div>';
+      } else if(stage.status==='error'){
+        card.innerHTML =
+          '<div class="cat-header"><span class="cat-badge">'+esc(stage.tag)+'</span><span class="cat-name">'+esc(stage.name)+'</span></div>' +
+          '<div class="stage-error-box"><span>'+esc(stage.error||'This reviewer failed to respond.')+'</span><button class="retry-btn" data-retry="'+stage.id+'">Retry</button></div>';
+      } else {
+        var p = stage.parsed || {};
+        var sc = field(p,'SCORE') || '0';
+        var cls = scoreClass(sc);
+        var col = scoreColor(sc);
+        var strengths = list(p,'STRENGTH');
+        var weaknesses = list(p,'WEAKNESS');
+        var opportunities = list(p,'OPPORTUNITY');
+        var recos = list(p,'RECOMMENDATION');
+        var analysis = field(p,'ANALYSIS') || (stage.raw ? stage.raw.slice(0,300) : '');
+
+        var html = '';
+        html += '<div class="cat-header" data-toggle="'+stage.id+'">';
+        html += '<span class="cat-badge">'+esc(stage.tag)+'</span>';
+        html += '<span class="cat-name">'+esc(stage.name)+'</span>';
+        html += '<span class="cat-verdict">'+esc(field(p,'VERDICT')||'')+'</span>';
+        html += '<span class="cat-score '+cls+'">'+esc(sc)+'</span>';
+        html += '<span class="expand-hint" id="hint-'+stage.id+'">show detail &#9662;</span>';
+        html += '</div>';
+        html += '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:'+Math.max(0,Math.min(100,parseInt(sc,10)||0))+'%;background:'+col+';"></div></div>';
+        html += '<div class="cat-body" id="body-'+stage.id+'">';
+        html += '<div class="cat-cols">';
+        html += '<div><div class="cat-list-title strength">Strengths</div>' + strengths.map(function(s){return '<div class="list-item">'+esc(s)+'</div>';}).join('') + '</div>';
+        html += '<div><div class="cat-list-title weakness">Weaknesses</div>' + weaknesses.map(function(s){return '<div class="list-item">'+esc(s)+'</div>';}).join('') + '</div>';
+        html += '</div>';
+        if(opportunities.length){
+          html += '<div class="cat-list-title" style="color:var(--warn)">Missed opportunity</div>' + opportunities.map(function(s){return '<div class="list-item">'+esc(s)+'</div>';}).join('');
+        }
+        if(recos.length){
+          html += '<div class="cat-reco"><div class="cat-list-title" style="color:var(--violet)">Recommendations</div>' + recos.map(function(s){return '<div class="list-item">'+esc(s)+'</div>';}).join('') + '</div>';
+        }
+        if(analysis){
+          html += '<div class="cat-analysis">'+esc(analysis)+'</div>';
+        }
+        html += '</div>';
+        card.innerHTML = html;
+      }
+      grid.appendChild(card);
+    });
+
+    // wire up expand toggles
+    grid.querySelectorAll('[data-toggle]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var id = el.getAttribute('data-toggle');
+        var body = $('body-'+id);
+        var hint = $('hint-'+id);
+        var open = body.classList.toggle('open');
+        hint.innerHTML = open ? 'hide detail &#9652;' : 'show detail &#9662;';
+      });
+    });
+    grid.querySelectorAll('[data-retry]').forEach(function(el){
+      el.addEventListener('click', function(e){
+        e.stopPropagation();
+        retryStage(el.getAttribute('data-retry'));
+      });
+    });
+  }
+
+  /* ============================================================
+     RENDERING — UPLOAD PREVIEW + SCORE RING
+  ============================================================ */
+  function renderUploadPreview(){
+    var txt = state.articleText && state.articleText.trim() ? state.articleText.trim() : 'No text submitted.';
+    $('miniTextPreview').textContent = txt.slice(0,260) + (txt.length>260 ? '…' : '');
+    var imgWrap = $('miniImagePreview');
+    if(state.image){
+      imgWrap.classList.remove('hidden');
+      imgWrap.innerHTML = '<img src="'+state.image.dataUrl+'" alt="Uploaded image">';
+    } else {
+      imgWrap.classList.add('hidden');
+      imgWrap.innerHTML = '';
+    }
+  }
+
+  function setScoreRing(score){
+    var circle = $('scoreRingFill');
+    var r = 66, circumference = 2*Math.PI*r;
+    var pct = Math.max(0, Math.min(100, parseInt(score,10)||0));
+    var offset = circumference * (1 - pct/100);
+    circle.setAttribute('stroke-dasharray', circumference.toFixed(1));
+    circle.setAttribute('stroke-dashoffset', circumference.toFixed(1));
+    circle.setAttribute('stroke', scoreColor(pct));
+    requestAnimationFrame(function(){
+      circle.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)';
+      circle.setAttribute('stroke-dashoffset', offset.toFixed(1));
+    });
+    $('scoreNum').textContent = pct;
+  }
+
+  /* ============================================================
+     RENDERING — FINAL REPORT
+  ============================================================ */
+  function renderFinalReport(synthStage){
+    var p = synthStage.parsed || {};
+    var overall = field(p,'OVERALL_SCORE') || '—';
+    setScoreRing(overall);
+    $('scoreTitle').textContent = scoreClass(overall)==='good' ? 'Publish-ready' : scoreClass(overall)==='mid' ? 'Needs work before publishing' : 'Not ready to publish';
+    $('scoreSub').textContent = 'Editor-in-Chief verdict across ' + (state.stages.length-1) + ' specialist reviews';
+
+    $('execSummary').textContent = field(p,'EXEC_SUMMARY') || 'No summary returned.';
+
+    var healthDims = [
+      ['Structure','HEALTH_STRUCTURE'],
+      ['Technical soundness','HEALTH_TECHNICAL'],
+      ['Engagement','HEALTH_ENGAGEMENT'],
+      ['Discoverability','HEALTH_DISCOVERABILITY']
+    ];
+    var healthHtml = '';
+    healthDims.forEach(function(d){
+      var v = parseInt(field(p,d[1]),10);
+      if(isNaN(v)) v = 0;
+      healthHtml += '<div class="health-row"><div class="health-top"><span>'+d[0]+'</span><span>'+v+'/100</span></div><div class="health-track"><div class="health-fill" style="width:'+v+'%"></div></div></div>';
+    });
+    $('healthBars').innerHTML = healthHtml;
+
+    var impacts = list(p,'IMPACT');
+    $('impactList').innerHTML = impacts.map(function(txt, i){
+      return '<div class="impact-item"><span class="impact-num">'+(i+1)+'</span><span>'+esc(txt)+'</span></div>';
+    }).join('') || '<p class="exec-text" style="color:var(--dim)">No improvements returned.</p>';
+
+    $('perfEstimate').textContent = field(p,'PERFORMANCE_ESTIMATE') || 'No performance estimate returned.';
+
+    $('baBefore').textContent = field(p,'BEFORE_SNIPPET') || '—';
+    $('baAfter').textContent = field(p,'AFTER_SNIPPET') || '—';
+
+    var titles = list(p,'TITLE_ALT');
+    $('titleAltList').innerHTML = titles.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('') || '<li style="color:var(--dim)">None returned.</li>';
+
+    var hooks = list(p,'HOOK_ALT');
+    $('hookAltList').innerHTML = hooks.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('') || '<li style="color:var(--dim)">None returned.</li>';
+
+    var checklist = list(p,'CHECKLIST');
+    $('checklist').innerHTML = checklist.map(function(t,i){
+      return '<li id="chk-'+i+'"><input type="checkbox" data-chk="'+i+'"><span>'+esc(t)+'</span></li>';
+    }).join('') || '<li style="color:var(--dim)">No checklist returned.</li>';
+    $('checklist').querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        document.getElementById('chk-'+cb.getAttribute('data-chk')).classList.toggle('checked', cb.checked);
+      });
+    });
+
+    var deeper = list(p,'DEEPER_PROMPT');
+    $('deeperChips').innerHTML = deeper.map(function(t){ return '<button type="button" class="chip" data-prompt="'+esc(t)+'">'+esc(t)+'</button>'; }).join('');
+    $('deeperChips').querySelectorAll('.chip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        $('followupInput').value = chip.getAttribute('data-prompt');
+        sendFollowup();
+      });
+    });
+
+    state.synthStage = synthStage;
+  }
+
+  /* ============================================================
+     DEEPER OPTIMIZATION CHAT
+  ============================================================ */
+  function appendChat(role, text){
+    var log = $('chatLog');
+    var msg = document.createElement('div');
+    msg.className = 'chat-msg ' + role;
+    msg.textContent = text;
+    log.appendChild(msg);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function sendFollowup(){
+    var input = $('followupInput');
+    var question = input.value.trim();
+    if(!question || !state.synthStage) return;
+    input.value = '';
+    $('followupSend').disabled = true;
+    appendChat('user', question);
+    var typing = document.createElement('div');
+    typing.className = 'chat-msg ai';
+    typing.textContent = 'Thinking...';
+    $('chatLog').appendChild(typing);
+    $('chatLog').scrollTop = $('chatLog').scrollHeight;
+
+    var sys = 'You are the Editor-in-Chief of Content Intelligence Studio continuing a review conversation with the creator. ' +
+      'Review strictness setting: "' + state.strictness + '" — ' + STRICTNESS[state.strictness] + ' ' +
+      'Answer the creator\'s follow-up question about optimizing their content. Respond in plain conversational text, no markdown, no lists with asterisks, under 130 words. Be specific to their actual content, not generic advice.';
+
+    var contextText = 'CONTENT TYPE: ' + contentTypeLabel() + '\nPLATFORM: ' + state.platform + '\n\n';
+    if(state.articleText && state.articleText.trim()){
+      contextText += 'CONTENT TEXT:\n"""\n' + state.articleText.trim().slice(0,5000) + '\n"""\n\n';
+    }
+    contextText += 'PRIOR EDITOR-IN-CHIEF SYNTHESIS:\n' + (state.synthStage.raw || '') + '\n\n';
+    contextText += "CREATOR'S FOLLOW-UP QUESTION: " + question;
+
+    var blocks = [];
+    if(state.image && state.contentType==='image'){
+      blocks.push({type:'image', source:{type:'base64', media_type: state.image.mediaType, data: state.image.base64}});
+    }
+    blocks.push({type:'text', text: contextText});
+
+    try{
+      var raw = await callClaudeWithRetry(sys, blocks, 1);
+      typing.textContent = raw.trim();
+    } catch(err){
+      typing.textContent = 'Could not get a response: ' + (err.message||'unknown error') + '. Please try again.';
+      typing.style.color = 'var(--danger)';
+    }
+    $('followupSend').disabled = false;
+  }
+
+  $('followupSend').addEventListener('click', sendFollowup);
+  $('followupInput').addEventListener('keydown', function(e){
+    if(e.key==='Enter') sendFollowup();
+  });
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  updateFieldLabels();
+  renderIntake();
+
+})();
+</script>
+</body>
+</html>
