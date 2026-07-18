@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dev Laptop Bench — Compare &amp; Decide</title>
+<style>
+  :root{
+    --bg: #0a0d10;
+    --panel: #12171c;
+    --panel-2: #171d23;
+    --line: #232b32;
+    --text: #e7ebee;
+    --muted: #8b98a3;
+    --muted-2: #5f6b74;
+    --amber: #f0a825;
+    --amber-dim: #7a5a1c;
+    --teal: #2ec4b6;
+    --teal-dim: #1c5a54;
+    --red: #e0563f;
+    --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; background: var(--bg); color: var(--text);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: local('JetBrains Mono');
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: local('Space Grotesk');
+  }
+
+  a { color: var(--teal); }
+
+  /* subtle grid backdrop */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{ position:relative; z-index:1; max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* HERO */
+  header.hero{
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, var(--panel) 0%, #0d1216 100%);
+    border-radius: 14px;
+    padding: 30px 28px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::after{
+    content:"";
+    position:absolute; top:-40%; right:-10%;
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(240,168,37,0.10) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display:flex; align-items:center; gap:8px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before{ content:"●"; font-size:8px; color: var(--teal); animation: pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
+  h1{
+    font-family: var(--sans);
+    font-size: clamp(26px, 4vw, 38px);
+    line-height: 1.12;
+    margin: 0 0 10px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  h1 span{ color: var(--amber); }
+  .hero p.sub{
+    color: var(--muted); font-size: 15px; max-width: 620px; margin: 0 0 18px; line-height: 1.55;
+  }
+  .hero-meta{
+    display:flex; flex-wrap:wrap; gap: 10px 22px;
+    font-family: var(--mono); font-size: 12px; color: var(--muted-2);
+  }
+  .hero-meta b{ color: var(--text); font-weight: 500; }
+
+  /* PANEL base */
+  .panel{
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  .panel-title{
+    display:flex; align-items:center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .panel-title h2{
+    font-family: var(--sans);
+    font-size: 17px;
+    margin:0;
+    font-weight: 600;
+    display:flex; align-items:center; gap: 9px;
+  }
+  .panel-title h2 .tag{
+    font-family: var(--mono); font-size: 10.5px; color: var(--muted-2);
+    border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+
+  /* WEIGHT SLIDERS */
+  .weights-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 16px 26px;
+  }
+  @media (max-width: 640px){ .weights-grid{ grid-template-columns: 1fr; } }
+  .weight-row label{
+    display:flex; justify-content: space-between; align-items:baseline;
+    font-size: 13.5px; margin-bottom: 7px; color: var(--text);
+  }
+  .weight-row label .val{ font-family: var(--mono); color: var(--amber); font-size: 13px; }
+  input[type=range]{
+    -webkit-appearance: none; width: 100%; height: 5px; border-radius: 3px;
+    background: var(--line); outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background: var(--amber); border: 2px solid #0a0d10;
+    cursor:pointer; margin-top:-1px;
+    box-shadow: 0 0 0 3px rgba(240,168,37,0.15);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px; height:14px; border-radius:50%;
+    background: var(--amber); border: 2px solid #0a0d10; cursor:pointer;
+  }
+  .weight-hint{ font-size: 11.5px; color: var(--muted-2); margin-top: 4px; }
+  .weights-actions{
+    display:flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;
+  }
+  button.btn{
+    font-family: var(--mono); font-size: 12px; letter-spacing: .03em;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 7px; cursor:pointer;
+    transition: border-color .15s, color .15s;
+  }
+  button.btn:hover{ border-color: var(--amber); color: var(--amber); }
+  button.btn.active{ border-color: var(--teal); color: var(--teal); }
+
+  /* RANKING */
+  #emptyState{
+    text-align:center; padding: 36px 20px; color: var(--muted);
+    font-size: 14px; display:none;
+  }
+  #emptyState b{ color: var(--text); display:block; margin-bottom:6px; font-family: var(--sans); font-size:16px;}
+
+  .rank-row{
+    display:grid;
+    grid-template-columns: 34px 1fr 90px;
+    align-items:center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    transition: transform .25s ease;
+  }
+  .rank-row:last-child{ border-bottom:none; }
+  .rank-num{
+    font-family: var(--mono); font-size: 18px; color: var(--muted-2); font-weight: 700;
+  }
+  .rank-row.first .rank-num{ color: var(--amber); }
+  .rank-body .rname{
+    display:flex; align-items:baseline; gap:8px; margin-bottom:7px; flex-wrap:wrap;
+  }
+  .rank-body .rname .n{ font-family: var(--sans); font-weight:600; font-size: 15.5px; }
+  .rank-body .rname .cat{ font-family: var(--mono); font-size: 10.5px; color: var(--muted-2); }
+  .badge-win{
+    font-family: var(--mono); font-size: 9.5px; letter-spacing:.05em;
+    background: rgba(46,196,182,0.12); color: var(--teal); border:1px solid var(--teal-dim);
+    padding: 2px 7px; border-radius: 4px; text-transform: uppercase;
+  }
+  .bar-track{
+    height: 8px; background: var(--panel-2); border-radius: 4px; overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  .bar-fill{
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--teal-dim), var(--teal));
+    transition: width .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .rank-row.first .bar-fill{ background: linear-gradient(90deg, var(--amber-dim), var(--amber)); }
+  .rscore{ font-family: var(--mono); text-align:right; font-size: 15px; color: var(--text); }
+  .rscore small{ display:block; font-size: 10px; color: var(--muted-2); font-weight:400; }
+
+  /* SPEC TABLE */
+  .table-scroll{ overflow-x:auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.spec{
+    width:100%; border-collapse: collapse; font-size: 13px; min-width: 720px;
+  }
+  table.spec th, table.spec td{
+    padding: 11px 14px; text-align:left; border-bottom: 1px solid var(--line);
+  }
+  table.spec thead th{
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing:.04em;
+    color: var(--muted); background: var(--panel-2); position: sticky; top:0;
+  }
+  table.spec tbody th{
+    font-family: var(--sans); font-weight: 600; color: var(--text); white-space: nowrap;
+    background: var(--panel);
+  }
+  table.spec tbody tr:last-child td, table.spec tbody tr:last-child th{ border-bottom:none; }
+  table.spec td{ font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+  table.spec td .note{ display:block; font-family: var(--body); color: var(--muted-2); font-size: 11px; margin-top:3px; }
+  .flag{
+    display:inline-block; font-family: var(--mono); font-size: 9px; letter-spacing:.04em;
+    padding: 1px 6px; border-radius: 4px; margin-left:6px; vertical-align: middle;
+    text-transform: uppercase;
+  }
+  .flag.derived{ background: rgba(240,168,37,0.12); color: var(--amber); border:1px solid var(--amber-dim); }
+  .flag.sourced{ background: rgba(46,196,182,0.10); color: var(--teal); border:1px solid var(--teal-dim); }
+
+  /* SOURCES PANEL */
+  .source-item{
+    display:flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .source-item:last-child{ border-bottom:none; }
+  .source-id{
+    font-family: var(--mono); color: var(--muted-2); font-size: 11px; min-width: 22px; padding-top:2px;
+  }
+  .source-item .stitle{ color: var(--text); font-weight: 500; }
+  .source-item .spub{ color: var(--muted); font-size: 12px; }
+  .source-item a.surl{ font-family: var(--mono); font-size: 11.5px; word-break: break-all; }
+
+  /* COLLAPSIBLE */
+  details.collapse{
+    border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+    margin-bottom: 18px; overflow:hidden;
+  }
+  details.collapse summary{
+    cursor:pointer; padding: 18px 22px; list-style:none;
+    display:flex; align-items:center; justify-content:space-between;
+    font-family: var(--sans); font-weight: 600; font-size: 15px;
+  }
+  details.collapse summary::-webkit-details-marker{ display:none; }
+  details.collapse summary .arrow{
+    font-family: var(--mono); color: var(--muted); transition: transform .2s;
+  }
+  details.collapse[open] summary .arrow{ transform: rotate(90deg); color: var(--amber); }
+  .collapse-body{ padding: 0 22px 22px; color: var(--muted); font-size: 13.5px; line-height:1.65; }
+  .collapse-body h4{ color: var(--text); font-family: var(--sans); font-size: 13.5px; margin: 18px 0 8px; }
+  .collapse-body h4:first-child{ margin-top:0; }
+  .collapse-body ul{ margin: 6px 0; padding-left: 20px; }
+  .collapse-body li{ margin-bottom: 6px; }
+  .conflict-box{
+    border-left: 2px solid var(--red); background: rgba(224,86,63,0.06);
+    padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+    font-size: 12.5px;
+  }
+  .conflict-box b{ color: var(--red); font-family: var(--mono); font-size: 11px; text-transform:uppercase; letter-spacing:.03em; }
+
+  footer{
+    text-align:center; color: var(--muted-2); font-size: 11.5px; font-family: var(--mono);
+    margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 560px){
+    .rank-row{ grid-template-columns: 24px 1fr 70px; gap: 10px; }
+    .panel{ padding:16px; }
+    header.hero{ padding: 22px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">compare &amp; decide · dev laptop bench</div>
+    <h1>Which laptop should <span>a developer</span> actually buy?</h1>
+    <p class="sub">A weighted comparison of four real 2024-generation laptops across the metrics that matter for coding and productivity work — price, performance, battery life, display, portability, and memory/storage. Every number below is sourced; drag the sliders to match your own priorities.</p>
+    <div class="hero-meta">
+      <span><b>4</b> laptops</span>
+      <span><b>6</b> criteria</span>
+      <span><b>15</b> cited sources</span>
+      <span>updated for 2024-generation models</span>
+    </div>
+  </header>
+
+  <!-- WEIGHTS PANEL -->
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Set your priorities <span class="tag">live ranking</span></h2>
+    </div>
+    <div class="weights-grid" id="weightsGrid"></div>
+    <div class="weights-actions">
+      <button class="btn" id="presetBalanced">Balanced (reset)</button>
+      <button class="btn" id="presetDev">Coding &amp; productivity</button>
+      <button class="btn" id="presetBudget">Budget-first</button>
+      <button class="btn" id="presetPortable">Max portability</button>
+    </div>
+  </section>
+
+  <!-- RANKING PANEL -->
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Live ranking <span class="tag" id="loadingTag">calculating…</span></h2>
+    </div>
+    <div id="emptyState">
+      <b>No priorities set</b>
+      Move at least one slider above zero to generate a ranking.
+    </div>
+    <div id="rankList"></div>
+  </section>
+
+  <!-- SPEC TABLE -->
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Full spec comparison</h2>
+    </div>
+    <div class="table-scroll">
+      <table class="spec" id="specTable"></table>
+    </div>
+    <p class="weight-hint" style="margin-top:12px;">
+      <span class="flag sourced">sourced</span> = a directly cited fact or benchmark. <span class="flag derived">derived</span> = calculated from sourced specs using a disclosed formula (see "How this was researched" below) — not itself a published number.
+    </p>
+  </section>
+
+  <!-- HOW THIS WAS RESEARCHED -->
+  <details class="collapse" id="researchPanel">
+    <summary>How this was researched <span class="arrow">▸</span></summary>
+    <div class="collapse-body">
+      <h4>Sourcing approach</h4>
+      <p>Every price, benchmark, and battery figure below comes from a named, citable source: manufacturer spec pages (Apple, Lenovo product listings) and independent review outlets (Tom's Guide, Tom's Hardware, Laptop Mag, Windows Central, PCWorld, XDA Developers, Notebookcheck) plus benchmark aggregators that compile Geekbench Browser submissions (NanoReview, CPU-Monkey). No number in this tool was invented or estimated by the assistant.</p>
+
+      <h4>Where each criterion came from</h4>
+      <ul>
+        <li><b>Price</b> — manufacturer or review-site listed starting price for the base or as-reviewed configuration named in the spec table.</li>
+        <li><b>Performance</b> — Geekbench 6 multi-core CPU score, cross-referenced against NanoReview's benchmark database, which aggregates real Geekbench Browser submissions for each chip.</li>
+        <li><b>Battery life</b> — the reviewer's own tested runtime (continuous Wi-Fi web browsing or PCMark 10 Modern Office rundown), not a manufacturer marketing claim, wherever a lab test was available.</li>
+        <li><b>Display quality</b> — raw resolution, refresh rate, and peak brightness are sourced facts. The single 0–100 "Display Quality" score is a <b>derived</b> composite: 40% normalized pixel count + 30% normalized refresh rate + 30% normalized brightness, computed in this tool rather than published anywhere. It is flagged as derived throughout.</li>
+        <li><b>Portability</b> — measured laptop weight in pounds, inverted so lighter scores higher.</li>
+        <li><b>Memory &amp; Storage</b> — base-configuration RAM and SSD capacity as sold, averaged as two independently normalized sourced numbers (not a single published composite).</li>
+      </ul>
+
+      <h4>Conflicts encountered and how they were resolved</h4>
+      <div class="conflict-box">
+        <b>Dell XPS 13 9350 — battery life varies drastically by panel</b>
+        Notebookcheck measured 20.5 hours of Wi-Fi web browsing on the base FHD+ (1920×1200, 120Hz) configuration, but multiple reviewers note the optional 2.8K OLED panel draws meaningfully more power. This tool uses the tested FHD+ figure since that's the base/cheapest configuration being compared, and flags the OLED tradeoff in the spec table note.
+      </div>
+      <div class="conflict-box">
+        <b>ASUS ROG Zephyrus G14 — battery framed inconsistently across reviewers</b>
+        Tom's Guide and Windows Central both describe the G14's battery life qualitatively as "middling" for productivity, while a lab-tested PCMark 10 Modern Office score of 5 hours 27 minutes gives a concrete number. This tool uses the lab-tested figure for consistency with the other three laptops, all of which are scored on measured runtimes rather than marketing claims.
+      </div>
+      <div class="conflict-box">
+        <b>Lenovo ThinkPad X1 Carbon Gen 12 — price swings widely with configuration and promo codes</b>
+        Lenovo's list price for the reviewed 16GB/512GB OLED configuration was $2,263 (Tom's Hardware), but Lenovo frequently runs steep coupon discounts (seen as low as ~$1,649 in Notebookcheck deal coverage) and a lower-cost non-touch IPS configuration also exists. This tool uses the as-reviewed list price for an apples-to-apples comparison and calls out in the table that street pricing is often meaningfully lower.
+      </div>
+
+      <h4>Limitations</h4>
+      <p>These are 2024-generation models (MacBook Air M3, Dell XPS 13 9350 "Lunar Lake," ASUS ROG Zephyrus G14 2024, Lenovo ThinkPad X1 Carbon Gen 12), the specific configurations named in the spec table, and battery/benchmark results reflect each reviewer's individual test unit and methodology, which can vary. Treat this as a well-sourced starting point for a decision, not a substitute for checking current retailer pricing before purchase.</p>
+    </div>
+  </details>
+
+  <!-- SOURCES PANEL -->
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Sources <span class="tag" id="sourceCount">15 citations</span></h2>
+    </div>
+    <div id="sourcesList"></div>
+  </section>
+
+  <footer>compare &amp; decide builder · data compiled from publicly available manufacturer specs and independent reviews · not a paid comparison</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // SOURCE REGISTRY
+  // ---------------------------------------------------------------------
+  const SOURCES = [
+    {id:1,  title:"MacBook Air 13-inch M3 review: A small wonder", pub:"Tom's Guide", url:"https://www.tomsguide.com/news/macbook-air-m3"},
+    {id:2,  title:"MacBook Air (13-inch, M3, 2024) — Tech Specs", pub:"Apple Support (official)", url:"https://support.apple.com/en-us/118551"},
+    {id:3,  title:"Apple M3: benchmarks and specs (Geekbench 6)", pub:"NanoReview", url:"https://nanoreview.net/en/cpu/apple-m3"},
+    {id:4,  title:"Dell XPS 13 (9350, 2024) review: Lunar Lake lands", pub:"Laptop Mag", url:"https://www.laptopmag.com/laptops/windows-laptops/dell-xps-13-9350"},
+    {id:5,  title:"Dell XPS 13 9350 — 20.5-hour battery life test coverage", pub:"Notebookcheck", url:"https://www.notebookcheck.net/Latest-Dell-XPS-13-9350-laptop-with-20-hour-battery-life-and-120-Hz-display-is-now-up-to-500-cheaper-than-MSRP.925391.0.html"},
+    {id:6,  title:"Intel Core Ultra 7 258V: benchmarks and specs (Geekbench 6)", pub:"NanoReview", url:"https://nanoreview.net/en/cpu/intel-core-ultra-7-258v"},
+    {id:7,  title:"ASUS ROG Zephyrus G14 (2024) review", pub:"Windows Central", url:"https://www.windowscentral.com/hardware/laptops/asus/asus-rog-zephyrus-g14-2024-review"},
+    {id:8,  title:"ASUS ROG Zephyrus G14 (2024) — display &amp; weight spec confirmation", pub:"Notebookcheck", url:"https://www.notebookcheck.net/Stellar-ASUS-ROG-Zephyrus-G14-2024-with-OLED-display-and-RTX-4060-records-a-new-all-time-low-price.843527.0.html"},
+    {id:9,  title:"ASUS ROG Zephyrus G14 (2024) review: PCMark 10 battery test", pub:"Basic Tutorials", url:"https://basic-tutorials.com/reviews/pc-laptop-review/asus-rog-zephyrus-g14-2024-review/"},
+    {id:10, title:"AMD Ryzen 9 8945HS: benchmarks and specs (Geekbench 6)", pub:"NanoReview", url:"https://nanoreview.net/en/cpu/amd-ryzen-9-8945hs"},
+    {id:11, title:"Lenovo ThinkPad X1 Carbon (Gen 12) Review", pub:"Tom's Hardware", url:"https://www.tomshardware.com/laptops/ultrabooks-ultraportables/lenovo-thinkpad-x1-carbon-gen-12-review"},
+    {id:12, title:"ThinkPad X1 Carbon Gen 12 — Specs, reviews and EoL info (Geekbench 6)", pub:"InvGate ITDB", url:"https://invgate.com/itdb/thinkpad-x1-carbon-gen-12"},
+    {id:13, title:"Lenovo ThinkPad X1 Carbon Gen 12 — OLED configuration listing", pub:"Amazon (manufacturer configuration)", url:"https://www.amazon.com/Lenovo-Processor-Non-Touch-Anti-Glare-Performance/dp/B0D5P4QTQ4"},
+    {id:14, title:"Lenovo ThinkPad X1 Carbon (Gen 12) review: PCMark 10 battery testing", pub:"XDA Developers", url:"https://www.xda-developers.com/lenovo-thinkpad-x1-carbon-g12-review/"},
+    {id:15, title:"Lenovo ThinkPad X1 Carbon review: The ideal business laptop (measured weight)", pub:"PCWorld", url:"https://www.pcworld.com/article/2250722/lenovo-thinkpad-x1-carbon-review.html"}
+  ];
+
+  // ---------------------------------------------------------------------
+  // LAPTOP DATA — every field cites a SOURCES id. No invented numbers.
+  // ---------------------------------------------------------------------
+  const LAPTOPS = [
+    {
+      key: "mba",
+      name: "MacBook Air 13\" M3",
+      cat: "Ultraportable · Apple Silicon",
+      price: 1099, priceNote: "8GB RAM / 256GB SSD, base config", priceSrc: [1],
+      perf: 11815, perfNote: "Geekbench 6 Multi-Core, Apple M3 8-core CPU", perfSrc: [3],
+      battery: 15.22, batteryNote: "15h 13m tested, continuous Wi-Fi web (Tom's Guide lab test)", batterySrc: [1],
+      weight: 2.70, weightNote: "11.97 × 8.46 × 0.44 in", weightSrc: [2],
+      resW: 2560, resH: 1664, refresh: 60, nits: 500, panel: "IPS (Liquid Retina)", displaySrc: [2],
+      ram: 8, storage: 256, ramNote: "configurable to 24GB RAM / 2TB SSD", ramSrc: [2]
+    },
+    {
+      key: "xps",
+      name: "Dell XPS 13 (9350)",
+      cat: "Premium ultrabook · Intel Lunar Lake",
+      price: 1399, priceNote: "Core Ultra 7 258V / 16GB / 512GB, base config", priceSrc: [4],
+      perf: 10802, perfNote: "Geekbench 6 Multi-Core, Intel Core Ultra 7 258V", perfSrc: [6],
+      battery: 20.5, batteryNote: "20h 30m tested, Wi-Fi web browsing, base FHD+ panel", batterySrc: [5],
+      weight: 2.60, weightNote: "1.2 kg measured", weightSrc: [5],
+      resW: 1920, resH: 1200, refresh: 120, nits: 435, panel: "IPS (FHD+, base config)", displaySrc: [5],
+      ram: 16, storage: 512, ramNote: "OLED upgrade caps refresh at 60Hz &amp; reduces battery life", ramSrc: [4]
+    },
+    {
+      key: "g14",
+      name: "ASUS ROG Zephyrus G14 (2024)",
+      cat: "Ultraportable gaming · AMD Ryzen",
+      price: 1599.99, priceNote: "Ryzen 9 8945HS / RTX 4060 / 16GB / 1TB, base config", priceSrc: [7],
+      perf: 11875, perfNote: "Geekbench 6 Multi-Core, AMD Ryzen 9 8945HS", perfSrc: [10],
+      battery: 5.45, batteryNote: "5h 27m, PCMark 10 Modern Office rundown at max brightness", batterySrc: [9],
+      weight: 3.31, weightNote: "1.50 kg measured", weightSrc: [8],
+      resW: 2880, resH: 1800, refresh: 120, nits: 423, panel: "OLED", displaySrc: [8],
+      ram: 16, storage: 1024, ramNote: "32GB/RTX 4070 upgrade adds $400", ramSrc: [7]
+    },
+    {
+      key: "x1c",
+      name: "Lenovo ThinkPad X1 Carbon Gen 12",
+      cat: "Business ultrabook · Intel Meteor Lake",
+      price: 2263, priceNote: "Core Ultra 7 155H / 16GB / 512GB OLED, as-reviewed", priceSrc: [11],
+      perf: 11638, perfNote: "Geekbench 6 Multi-Core, Intel Core Ultra 7 155H", perfSrc: [12],
+      battery: 9.23, batteryNote: "9h 14m tested, continuous Wi-Fi web at 150 nits", batterySrc: [11],
+      weight: 2.42, weightNote: "measured by reviewer", weightSrc: [15],
+      resW: 2880, resH: 1800, refresh: 120, nits: 400, panel: "OLED (non-touch config)", displaySrc: [13],
+      ram: 16, storage: 512, ramNote: "configurable to 64GB RAM / 2TB SSD; lower-cost 1920×1200 IPS option exists", ramSrc: [12]
+    }
+  ];
+
+  // ---------------------------------------------------------------------
+  // CRITERIA DEFINITIONS
+  // ---------------------------------------------------------------------
+  const CRITERIA = [
+    { key:"price",      label:"Price",             invert:true,  hint:"Lower starting price scores higher", default:70 },
+    { key:"perf",        label:"Performance",       invert:false, hint:"Geekbench 6 multi-core score", default:70 },
+    { key:"battery",     label:"Battery life",      invert:false, hint:"Reviewer-tested runtime in hours", default:70 },
+    { key:"display",     label:"Display quality",   invert:false, hint:"Derived: resolution + refresh + brightness", default:50 },
+    { key:"portability", label:"Portability",       invert:false, hint:"Lighter weight scores higher", default:50 },
+    { key:"memstorage",  label:"Memory &amp; storage", invert:false, hint:"Base-config RAM + SSD capacity", default:40 }
+  ];
+
+  const PRESETS = {
+    balanced:  {price:70, perf:70, battery:70, display:50, portability:50, memstorage:40},
+    dev:       {price:40, perf:85, battery:75, display:45, portability:35, memstorage:70},
+    budget:    {price:95, perf:40, battery:55, display:20, portability:35, memstorage:30},
+    portable:  {price:30, perf:35, battery:70, display:30, portability:95, memstorage:20}
+  };
+
+  let weights = {...PRESETS.balanced};
+
+  // ---------------------------------------------------------------------
+  // NORMALIZATION HELPERS
+  // ---------------------------------------------------------------------
+  function normalize(values, invert){
+    const min = Math.min(...values), max = Math.max(...values);
+    if (max === min) return values.map(()=>100);
+    return values.map(v=>{
+      let n = (v - min) / (max - min) * 100;
+      return invert ? 100 - n : n;
+    });
+  }
+
+  function computeDisplayScores(laptops){
+    const pix = laptops.map(l=>l.resW*l.resH);
+    const rf  = laptops.map(l=>l.refresh);
+    const nt  = laptops.map(l=>l.nits);
+    const npix = normalize(pix,false), nrf = normalize(rf,false), nnt = normalize(nt,false);
+    return laptops.map((l,i)=> Math.round(npix[i]*0.4 + nrf[i]*0.3 + nnt[i]*0.3));
+  }
+
+  function computeMemStorageScores(laptops){
+    const ram = laptops.map(l=>l.ram);
+    const sto = laptops.map(l=>l.storage);
+    const nram = normalize(ram,false), nsto = normalize(sto,false);
+    return laptops.map((l,i)=> Math.round((nram[i]+nsto[i])/2));
+  }
+
+  // Precompute normalized per-criterion scores for every laptop once.
+  function buildScoreMatrix(){
+    const priceN    = normalize(LAPTOPS.map(l=>l.price), true);
+    const perfN     = normalize(LAPTOPS.map(l=>l.perf), false);
+    const battN     = normalize(LAPTOPS.map(l=>l.battery), false);
+    const dispN     = computeDisplayScores(LAPTOPS);
+    const portN     = normalize(LAPTOPS.map(l=>l.weight), true);
+    const memN      = computeMemStorageScores(LAPTOPS);
+
+    LAPTOPS.forEach((l,i)=>{
+      l.scores = {
+        price: Math.round(priceN[i]),
+        perf: Math.round(perfN[i]),
+        battery: Math.round(battN[i]),
+        display: dispN[i],
+        portability: Math.round(portN[i]),
+        memstorage: memN[i]
+      };
+    });
+  }
+  buildScoreMatrix();
+
+  // ---------------------------------------------------------------------
+  // RENDER: WEIGHT SLIDERS
+  // ---------------------------------------------------------------------
+  const weightsGrid = document.getElementById('weightsGrid');
+  CRITERIA.forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'weight-row';
+    row.innerHTML = `
+      <label for="w_${c.key}"><span>${c.label}</span><span class="val" id="v_${c.key}">${weights[c.key]}</span></label>
+      <input type="range" min="0" max="100" step="1" value="${weights[c.key]}" id="w_${c.key}">
+      <div class="weight-hint">${c.hint}</div>
+    `;
+    weightsGrid.appendChild(row);
+    row.querySelector('input').addEventListener('input', (e)=>{
+      weights[c.key] = parseInt(e.target.value,10);
+      document.getElementById('v_'+c.key).textContent = weights[c.key];
+      clearPresetActive();
+      render();
+    });
+  });
+
+  function setWeights(preset){
+    weights = {...preset};
+    CRITERIA.forEach(c=>{
+      document.getElementById('w_'+c.key).value = weights[c.key];
+      document.getElementById('v_'+c.key).textContent = weights[c.key];
+    });
+    render();
+  }
+
+  function clearPresetActive(){
+    document.querySelectorAll('.weights-actions .btn').forEach(b=>b.classList.remove('active'));
+  }
+
+  document.getElementById('presetBalanced').addEventListener('click', (e)=>{ clearPresetActive(); e.target.classList.add('active'); setWeights(PRESETS.balanced); });
+  document.getElementById('presetDev').addEventListener('click', (e)=>{ clearPresetActive(); e.target.classList.add('active'); setWeights(PRESETS.dev); });
+  document.getElementById('presetBudget').addEventListener('click', (e)=>{ clearPresetActive(); e.target.classList.add('active'); setWeights(PRESETS.budget); });
+  document.getElementById('presetPortable').addEventListener('click', (e)=>{ clearPresetActive(); e.target.classList.add('active'); setWeights(PRESETS.portable); });
+
+  // ---------------------------------------------------------------------
+  // RENDER: RANKING
+  // ---------------------------------------------------------------------
+  const rankList = document.getElementById('rankList');
+  const emptyState = document.getElementById('emptyState');
+
+  function render(){
+    const totalWeight = Object.values(weights).reduce((a,b)=>a+b,0);
+
+    if (totalWeight === 0){
+      rankList.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    rankList.style.display = 'block';
+    emptyState.style.display = 'none';
+
+    const results = LAPTOPS.map(l=>{
+      let sum = 0;
+      CRITERIA.forEach(c=>{ sum += (weights[c.key]/100) * l.scores[c.key]; });
+      const finalScore = sum / (totalWeight/100) ; // weighted average, 0-100 scale roughly
+      return { laptop:l, score: finalScore };
+    }).sort((a,b)=> b.score - a.score);
+
+    const maxScore = Math.max(...results.map(r=>r.score), 1);
+
+    rankList.innerHTML = results.map((r,i)=>{
+      const pct = Math.max(4, (r.score/maxScore)*100);
+      return `
+        <div class="rank-row ${i===0?'first':''}">
+          <div class="rank-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="rank-body">
+            <div class="rname">
+              <span class="n">${r.laptop.name}</span>
+              <span class="cat">${r.laptop.cat}</span>
+              ${i===0 ? '<span class="badge-win">best match</span>' : ''}
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="rscore">${r.score.toFixed(1)}<small>/ 100</small></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ---------------------------------------------------------------------
+  // RENDER: SPEC TABLE
+  // ---------------------------------------------------------------------
+  function fmtRes(l){ return `${l.resW}×${l.resH}`; }
+
+  function renderTable(){
+    const rows = [
+      { label:"Starting price", get:l=>`$${l.price.toLocaleString()}<span class="note">${l.priceNote}</span>`, flag:"sourced" },
+      { label:"Performance (GB6 Multi)", get:l=>`${l.perf.toLocaleString()}<span class="note">${l.perfNote}</span>`, flag:"sourced" },
+      { label:"Battery life (tested)", get:l=>`${l.battery.toFixed(1)}h<span class="note">${l.batteryNote}</span>`, flag:"sourced" },
+      { label:"Display", get:l=>`${fmtRes(l)}, ${l.refresh}Hz, ${l.nits} nits<span class="note">${l.panel}</span>`, flag:"sourced" },
+      { label:"Display Quality Score", get:l=>`${l.scores.display}/100<span class="note">Derived composite — see research panel</span>`, flag:"derived" },
+      { label:"Weight", get:l=>`${l.weight.toFixed(2)} lb<span class="note">${l.weightNote}</span>`, flag:"sourced" },
+      { label:"RAM / Storage", get:l=>`${l.ram}GB / ${l.storage>=1024 ? (l.storage/1024)+'TB' : l.storage+'GB'}<span class="note">${l.ramNote}</span>`, flag:"sourced" }
+    ];
+
+    let html = '<thead><tr><th>Criterion</th>';
+    LAPTOPS.forEach(l=> html += `<th>${l.name}</th>`);
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(row=>{
+      html += `<tr><th>${row.label} <span class="flag ${row.flag}">${row.flag}</span></th>`;
+      LAPTOPS.forEach(l=>{
+        html += `<td>${row.get(l)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    document.getElementById('specTable').innerHTML = html;
+  }
+
+  // ---------------------------------------------------------------------
+  // RENDER: SOURCES
+  // ---------------------------------------------------------------------
+  function renderSources(){
+    document.getElementById('sourceCount').textContent = SOURCES.length + ' citations';
+    document.getElementById('sourcesList').innerHTML = SOURCES.map(s=>`
+      <div class="source-item">
+        <div class="source-id">[${s.id}]</div>
+        <div>
+          <div class="stitle">${s.title}</div>
+          <div class="spub">${s.pub}</div>
+          <a class="surl" href="${s.url}" target="_blank" rel="noopener noreferrer">${s.url}</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---------------------------------------------------------------------
+  // INIT with a brief "calculating" loading state for a premium feel
+  // ---------------------------------------------------------------------
+  function init(){
+    try{
+      renderTable();
+      renderSources();
+      const loadingTag = document.getElementById('loadingTag');
+      rankList.style.opacity = '0';
+      setTimeout(()=>{
+        render();
+        rankList.style.transition = 'opacity .3s ease';
+        rankList.style.opacity = '1';
+        loadingTag.textContent = 'live';
+      }, 380);
+    } catch(err){
+      rankList.innerHTML = `<div style="color:var(--red); font-family:var(--mono); font-size:13px;">
+        Something went wrong rendering the comparison. Try reloading the page.
+      </div>`;
+      console.error(err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState !== 'loading') init();
+
+})();
+</script>
+</body>
+</html>
